@@ -1,0 +1,70 @@
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Lexend+Mega:wght@100..900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-neo-white text-neo-black font-sans selection:bg-neo-black selection:text-neo-white;
+  }
+}
+
+@layer components {
+  .neo-box {
+    @apply border-4 border-neo-black shadow-neo bg-white transition-all duration-200 active:translate-x-1 active:translate-y-1 active:shadow-none;
+  }
+
+  .neo-button {
+    @apply neo-box px-6 py-3 font-bold hover:bg-neo-yellow cursor-pointer text-lg uppercase;
+  }
+
+  .neo-input {
+    @apply neo-box p-4 w-full outline-none focus:bg-neo-pink/20 placeholder:text-neo-black/50 font-bold text-xl;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 12px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-white border-l-4 border-neo-black;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-neo-black border-4 border-white hover:bg-neo-yellow;
+  }
+
+  /* Utilities */
+  .text-outline-white {
+    -webkit-text-stroke: 2px white;
+    text-shadow: 4px 4px 0px #000;
+  }
+
+  .striped-bar {
+    background-image: linear-gradient(45deg,
+        rgba(0, 0, 0, 0.1) 25%,
+        transparent 25%,
+        transparent 50%,
+        rgba(0, 0, 0, 0.1) 50%,
+        rgba(0, 0, 0, 0.1) 75%,
+        transparent 75%,
+        transparent);
+    background-size: 40px 40px;
+  }
+
+  @keyframes progress {
+    0% {
+      background-position: 0 0;
+    }
+
+    100% {
+      background-position: 40px 0;
+    }
+  }
+
+  .animate-progress {
+    animation: progress 1s linear infinite;
+  }
+}
