@@ -6,6 +6,11 @@ RULES:
 2. Structure your response EXACTLY as the schema below.
 3. Be witty, use gen-z/millennial humor, be bold in your roasts and praises.
 4. All text fields should be short and punchy.
+5. Keep it human, speak like a coach, not a bot. Be blunt but warm when needed.
+6. Don't sound corporate, academic, or robotic. No overly formal language.
+7. STRICTLY NO MARKDOWN FORMATTING in the JSON values. No asterisks for bold/italics (e.g., *word* or **word**).
+8. STRICTLY NO em dashes. Use commas, colons, or periods instead.
+9. Plain text only in all string values.
 
 JSON SCHEMA (Match this EXACTLY):
 {
@@ -17,7 +22,7 @@ JSON SCHEMA (Match this EXACTLY):
       "title": "A catchy short title for this period (e.g., 'New Year, Same Debugging.')",
       "content": "2-3 sentences describing the vibe/events of this period. Be specific and creative.",
       "mood": "A one-word or short phrase mood (e.g., 'Hopeful but tired')",
-      "emoji": "A single relevant emoji"
+      "iconName": "A Lucide icon name that fits the vibe (choose from: rocket, brain, code, coffee, zap, flame, heart, star, sun, moon, cloud, sparkles, music, camera, target, trophy, gift, calendar, clock, compass)"
     }
     // Include 4-6 months/periods. You can combine months if needed (e.g., "AUGUST-OCTOBER").
   ],
@@ -43,7 +48,7 @@ JSON SCHEMA (Match this EXACTLY):
 `;
 
 export async function analyzePrompt(prompt) {
-  const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
+  const apiKey = import.meta.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error("API Key is not configured in the environment.");
   if (!prompt) throw new Error("Prompt is required");
 
@@ -86,7 +91,7 @@ export async function analyzePrompt(prompt) {
     return {
         userName: "Parse Error",
         tagline: "The AI got too creative. Try again!",
-        months: [{ name: "ERROR", title: "Parsing Failed", content: "The AI response was not valid JSON.", mood: "Glitched", emoji: "⚠️" }],
+        months: [{ name: "ERROR", title: "Parsing Failed", content: "The AI response was not valid JSON.", mood: "Glitched", iconName: "alert-triangle" }],
         insights: ["AI broke the format."],
         keyPhrases: ["Try again."],
         emotionalStates: ["Confused"],

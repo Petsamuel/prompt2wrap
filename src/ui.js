@@ -1,6 +1,8 @@
 import { createIcons, icons } from 'lucide';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import Chart from 'chart.js/auto';
+import { setMood, setChaosLevel } from './background.js';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -149,9 +151,11 @@ export function renderResults(data) {
 
     // Generate sections HTML from data.months
     const monthSections = data.months.map((month, i) => `
-        <section class="min-h-screen flex flex-col items-center justify-center px-8 py-20 relative section-month" data-mood="${month.mood}">
+        <section class="min-h-screen flex flex-col items-center justify-center px-8 py-20 relative section-month" data-mood="${month.mood}" data-index="${i}">
             <div class="max-w-3xl w-full text-center">
-                <span class="text-6xl md:text-8xl mb-4 block">${month.emoji}</span>
+                <div class="w-24 h-24 md:w-32 md:h-32 mx-auto mb-6 border-2 border-white/20 rounded-full flex items-center justify-center bg-white/5">
+                    <i data-lucide="${month.iconName || 'sparkles'}" class="w-12 h-12 md:w-16 md:h-16 text-neo-pink"></i>
+                </div>
                 <h2 class="font-display text-5xl md:text-7xl text-white mb-2 leading-none">${month.name}</h2>
                 <p class="font-mono text-neo-pink text-lg md:text-xl mb-8">"${month.title}"</p>
                 <p class="text-xl md:text-2xl text-white/80 leading-relaxed">${month.content}</p>
@@ -184,16 +188,23 @@ export function renderResults(data) {
     `;
 
     const statsSection = `
-        <section class="min-h-screen flex flex-col items-center justify-center px-8 py-20 relative">
-            <div class="max-w-4xl w-full">
+        <section class="min-h-screen flex flex-col items-center justify-center px-8 py-20 relative" id="stats-section">
+            <div class="max-w-5xl w-full">
                 <h2 class="font-display text-5xl md:text-7xl text-neo-blue text-center mb-16">BY THE NUMBERS</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    ${data.stats.map(s => `
-                        <div class="neo-box p-6 text-center">
-                            <div class="text-4xl font-display text-white mb-2">${s.value}</div>
-                            <div class="font-mono text-xs text-neo-pink uppercase">${s.label}</div>
-                        </div>
-                    `).join('')}
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-2 gap-4">
+                        ${data.stats.map((s, i) => `
+                            <div class="neo-box p-6 text-center transform hover:scale-105 transition-transform">
+                                <div class="text-3xl md:text-4xl font-display text-white mb-2">${s.value}</div>
+                                <div class="font-mono text-xs text-neo-pink uppercase">${s.label}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <!-- Chart -->
+                    <div class="neo-box p-8 aspect-square flex items-center justify-center">
+                        <canvas id="statsChart"></canvas>
+                    </div>
                 </div>
             </div>
         </section>
@@ -234,8 +245,11 @@ export function renderResults(data) {
     createIcons({ icons });
 
     // ScrollTrigger Animations for each section
+    const moods = ['happy', 'creative', 'intense', 'calm', 'chaotic', 'focused', 'tired'];
+    
     gsap.utils.toArray('section').forEach((section, i) => {
-        gsap.from(section.querySelectorAll('h1, h2, p, li, span, div'), {
+        // Content animation
+        gsap.from(section.querySelectorAll('h1, h2, p, li, span, div:not(.neo-box)'), {
             scrollTrigger: {
                 trigger: section,
                 start: 'top 80%',
@@ -247,7 +261,70 @@ export function renderResults(data) {
             stagger: 0.1,
             ease: 'power3.out'
         });
+        
+        // Background mood change on section enter
+        ScrollTrigger.create({
+            trigger: section,
+            start: 'top center',
+            onEnter: () => {
+                const moodFromData = section.dataset.mood?.toLowerCase();
+                const mood = moodFromData || moods[i % moods.length];
+                const chaosLevel = (i % 3 === 0) ? 0.8 : (i % 2 === 0) ? 0.5 : 0.2;
+                setMood(mood, (i + 1) / 6);
+                setChaosLevel(chaosLevel);
+            },
+            onEnterBack: () => {
+                const moodFromData = section.dataset.mood?.toLowerCase();
+                const mood = moodFromData || moods[i % moods.length];
+                setMood(mood, (i + 1) / 6);
+            }
+        });
     });
+
+    // Stats Chart (Emotional States as Polar Area Chart)
+    const chartCanvas = document.getElementById('statsChart');
+    if (chartCanvas && data.emotionalStates && data.emotionalStates.length > 0) {
+        const ctx = chartCanvas.getContext('2d');
+        new Chart(ctx, {
+            type: 'polarArea',
+            data: {
+                labels: data.emotionalStates,
+                datasets: [{
+                    data: data.emotionalStates.map(() => Math.floor(Math.random() * 50) + 50), // Random intensity for visual effect
+                    backgroundColor: [
+                        'rgba(255, 144, 232, 0.7)', // Pink
+                        'rgba(35, 160, 255, 0.7)',   // Blue
+                        'rgba(0, 255, 148, 0.7)',    // Green
+                        'rgba(255, 201, 0, 0.7)',    // Yellow
+                        'rgba(255, 100, 100, 0.7)'   // Red
+                    ],
+                    borderColor: 'rgba(255, 255, 255, 0.3)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    r: {
+                        ticks: { display: false },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        angleLines: { color: 'rgba(255, 255, 255, 0.1)' }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: 'rgba(255, 255, 255, 0.7)',
+                            font: { family: 'Space Mono', size: 10 },
+                            padding: 15
+                        }
+                    }
+                }
+            }
+        });
+    }
 
     document.getElementById('reset-btn').addEventListener('click', () => {
          gsap.to('#results-container', { opacity: 0, y: -20, duration: 0.5, onComplete: () => renderInputScreen(window._onSubmit) });
