@@ -81,12 +81,13 @@ export function renderInputScreen(onSubmit) {
 
       </div>
       
-      <!-- FOOTER -->
       <div class="fixed bottom-4 right-4 z-40">
         <div class="font-mono text-xs text-white/30 text-right">
           <p>SYSTEM_STATUS: ONLINE</p>
         </div>
       </div>
+
+      ${renderHelpOverlay()}
 
     </div>
   `;
@@ -121,6 +122,111 @@ export function renderInputScreen(onSubmit) {
         }
     });
   }
+
+  // --- HELP / INSTRUCTION SYSTEM ---
+  const helpBtn = document.getElementById('help-trigger');
+  const helpOverlay = document.getElementById('help-overlay');
+  const closeHelpBtn = document.getElementById('close-help');
+
+  if (helpBtn && helpOverlay && closeHelpBtn) {
+      // Pulse animation for the trigger (Disabled for cleaner look)
+      // gsap.to(helpBtn, { 
+      //     scale: 1.05, 
+      //     duration: 2, 
+      //     repeat: -1, 
+      //     yoyo: true, 
+      //     ease: "sine.inOut" 
+      // });
+
+      // Toggle Card logic
+      helpBtn.addEventListener('click', () => {
+          if (helpOverlay.classList.contains('hidden')) {
+              helpOverlay.classList.remove('hidden');
+              gsap.fromTo(helpOverlay, 
+                  { opacity: 0, x: 20 }, 
+                  { opacity: 1, x: 0, duration: 0.3, ease: "power2.out" }
+              );
+          } else {
+              gsap.to(helpOverlay, { 
+                  opacity: 0, 
+                  x: 20, 
+                  duration: 0.3, 
+                  ease: "power2.in", 
+                  onComplete: () => helpOverlay.classList.add('hidden') 
+              });
+          }
+      });
+
+      const closeAction = () => {
+          gsap.to(helpOverlay, { 
+              opacity: 0, 
+              x: 20, 
+              duration: 0.3, 
+              ease: "power2.in", 
+              onComplete: () => helpOverlay.classList.add('hidden') 
+          });
+      };
+
+      closeHelpBtn.addEventListener('click', closeAction);
+  }
+}
+
+function renderHelpOverlay() {
+    const { remaining } = getUsageStatus(); // Access the exported function if possible, or just read storage. 
+    // Since getUsageStatus is exported from this file, we can use it, but `renderHelpOverlay` is outside the module scope where it's defined? 
+    // No, it's in the same file.
+    
+    return `
+    <!-- HELP TRIGGER -->
+    <button id="help-trigger" class="fixed top-8 right-8 z-50 text-white/50 hover:text-white transition-colors">
+        <i data-lucide="help-circle" class="w-8 h-8"></i>
+    </button>
+
+    <!-- HELP CARD POPOVER -->
+    <div id="help-overlay" class="fixed top-24 right-4 md:right-8 z-50 w-80 md:w-96 neo-box p-6 hidden backdrop-blur-xl bg-black/90 border border-white/10 shadow-2xl shadow-neo-pink/10">
+        <!-- Header -->
+        <h3 class="font-display text-2xl text-neo-pink mb-6 uppercase">How to use</h3>
+        
+        <!-- List -->
+        <ul class="space-y-6 font-mono text-sm text-white/80">
+            <li class="flex gap-4">
+                <span class="text-neo-green">→</span>
+                <span>Paste your conversation history, prompts, or describe your year</span>
+            </li>
+            <li class="flex gap-4">
+                <span class="text-neo-green">→</span>
+                <span>The AI will analyze your vibe and create a personalized "Wrapped"</span>
+            </li>
+            <li class="flex gap-4">
+                <span class="text-neo-green">→</span>
+                <span>Scroll through your story with immersive 3D sections</span>
+            </li>
+            
+            <li class="flex gap-4 items-center">
+                <span class="text-neo-green">→</span>
+                <div class="flex items-center gap-2">
+                    <span>Press</span>
+                    <kbd class="px-2 py-1 bg-white/10 rounded border border-white/20 text-xs">Ctrl + Enter</kbd>
+                    <span>to submit quickly</span>
+                </div>
+            </li>
+
+            <li class="flex gap-4 pt-4 border-t border-white/10 text-white/50">
+                <span class="text-neo-green">→</span>
+                <span>You have <span class="text-white">${remaining} credits</span> remaining today</span>
+            </li>
+        </ul>
+
+        <!-- Close Button (Absolute) -->
+        <!-- We can just toggle with the trigger, but let's keep a close button if needed, or maybe the trigger behaves as toggle. 
+             The previous design in the image likely didn't have a big X inside, maybe just clicking outside or the trigger again? 
+             But for safety, let's keep a subtle close or just rely on the trigger. 
+             Actually, let's add a small close icon in top right of card. -->
+        <button id="close-help" class="absolute top-4 right-4 text-white/20 hover:text-white transition-colors">
+            <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+    </div>
+    `;
 }
 
 export function renderLoading() {
