@@ -72,7 +72,7 @@ export function renderInputScreen(onSubmit) {
                     <span>${remaining}/${max} CREDITS</span>
                  </div>
                  <button id="generate-btn" class="neo-button group">
-                    <span class="relative z-10 group-hover:text-black">GENERATE WRAPPED</span>
+                    <span class="relative z-10 group-hover:text-black !text-xl">GENERATE WRAPPED</span>
                  </button>
                </div>
              `}
