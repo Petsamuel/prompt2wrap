@@ -1,6 +1,8 @@
-import Chart from 'chart.js/auto';
 import { createIcons, icons } from 'lucide';
 import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 
 const app = document.getElementById('app');
 
@@ -34,10 +36,11 @@ export function renderInputScreen(onSubmit) {
       <!-- MAIN CONTENT -->
       <div class="relative z-10 w-full max-w-7xl mx-auto px-4 flex flex-col items-center justify-center min-h-screen">
         
-        <!-- GIANT TITLE -->
-        <div class="text-center mb-12 perspective-1000">
-           <h1 class="font-display text-8xl md:text-[10rem] lg:text-[12rem] leading-none tracking-tighter text-transparent bg-clip-text bg-white opacity-0" id="title-prompt" style="-webkit-text-stroke: 2px white;">PROMPT</h1>
-           <h1 class="font-display text-8xl md:text-[10rem] lg:text-[12rem] leading-none tracking-tighter text-white mix-blend-overlay opacity-0" id="title-wrapped">WRAPPED</h1>
+        <!-- STACKED LOGO: PROMPT / 2 / WRAPPED -->
+        <div class="text-center mb-12 relative" id="logo-container">
+           <h1 class="font-display text-6xl md:text-8xl lg:text-[9rem] leading-none tracking-tighter text-white opacity-0" id="title-prompt">PROMPT</h1>
+           <h1 class="font-display text-9xl md:text-[12rem] lg:text-[15rem] leading-none tracking-tighter text-neo-pink absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 opacity-0" id="title-2">2</h1>
+           <h1 class="font-display text-6xl md:text-8xl lg:text-[9rem] leading-none tracking-tighter text-white opacity-0" id="title-wrapped">WRAPPED</h1>
         </div>
 
         <!-- INPUT AREA -->
@@ -55,21 +58,19 @@ export function renderInputScreen(onSubmit) {
                  <p class="font-mono text-white/60">Daily limit reached. Recharge required.</p>
                </div>
              ` : `
-               <label class="block font-mono text-xs text-neo-pink mb-4 tracking-widest">INPUT_TERMINAL_V2 :: READY</label>
+               <label class="block font-mono text-xs text-neo-pink mb-4 tracking-widest">PASTE YOUR CONVERSATION / PROMPT HISTORY</label>
                <textarea 
                  id="prompt-input" 
-                 rows="3" 
-                 class="neo-input bg-transparent border-none text-3xl md:text-4xl text-white font-bold placeholder:text-white/20 focus:ring-0 resize-none leading-tight" 
-                 placeholder="TYPE_YOUR_PROMPT_HERE..."></textarea>
+                 rows="5" 
+                 class="neo-input bg-transparent border-none text-xl md:text-2xl text-white font-bold placeholder:text-white/20 focus:ring-0 resize-none leading-tight" 
+                 placeholder="Paste your year's worth of prompts, your vibe check, or just describe your journey..."></textarea>
                
                <div class="mt-8 flex items-center justify-between border-t border-white/10 pt-6">
                  <div class="flex items-center gap-4 text-xs font-mono text-white/40">
                     <span>${remaining}/${max} CREDITS</span>
-                    <span>::</span>
-                    <span>AI_MODEL_LOADING</span>
                  </div>
                  <button id="generate-btn" class="neo-button group">
-                    <span class="relative z-10 group-hover:text-black">INITIALIZE</span>
+                    <span class="relative z-10 group-hover:text-black">GENERATE WRAPPED</span>
                  </button>
                </div>
              `}
@@ -82,7 +83,6 @@ export function renderInputScreen(onSubmit) {
       <div class="fixed bottom-4 right-4 z-40">
         <div class="font-mono text-xs text-white/30 text-right">
           <p>SYSTEM_STATUS: ONLINE</p>
-          <p>RENDERER: WEBGL</p>
         </div>
       </div>
 
@@ -91,43 +91,29 @@ export function renderInputScreen(onSubmit) {
 
   createIcons({ icons });
 
-  // GSAP Animations
+  // GSAP Animations for the STACKED LOGO
   const tl = gsap.timeline();
   
-  tl.to('#title-prompt', { opacity: 1, duration: 0.1, delay: 0.2 })
-    .to('#title-prompt', { opacity: 0.2, duration: 0.05 })
-    .to('#title-prompt', { opacity: 1, duration: 0.05 })
-    .to('#title-prompt', { y: 0, duration: 1, ease: 'power4.out' }, "-=0.2")
-    
-    .to('#title-wrapped', { opacity: 1, duration: 0.1 }, "-=0.5")
-    .from('#title-wrapped', { x: -50, filter: 'blur(10px)', duration: 0.8 }, "-=0.4")
-    
+  tl.to('#title-prompt', { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' })
+    .to('#title-wrapped', { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' }, "-=0.3")
+    .to('#title-2', { opacity: 1, scale: 1, duration: 0.6, ease: 'elastic.out(1, 0.5)' }, "-=0.2")
     .to('#input-card', { opacity: 1, y: 0, duration: 0.8, ease: 'back.out(1.7)' }, "-=0.2");
 
   if (!isLocked) {
     const btn = document.getElementById('generate-btn');
     const input = document.getElementById('prompt-input');
 
-    btn.addEventListener('mouseenter', () => {
-        gsap.to(btn, { scale: 1.05, duration: 0.2 });
-    });
-    btn.addEventListener('mouseleave', () => {
-        gsap.to(btn, { scale: 1, duration: 0.2 });
-    });
-
     btn.addEventListener('click', () => {
       const val = input.value.trim();
       if (val) {
-        // Exit animation
-        gsap.to('#main-container', { scale: 1.1, opacity: 0, filter: 'blur(20px)', duration: 0.5, onComplete: () => onSubmit(val) });
+        gsap.to('#main-container', { scale: 1.05, opacity: 0, filter: 'blur(20px)', duration: 0.5, onComplete: () => onSubmit(val) });
       } else {
         gsap.fromTo(input, { x: -10 }, { x: 10, duration: 0.1, repeat: 5, yoyo: true });
       }
     });
 
-    // Enter key support
     input.addEventListener('keydown', (e) => {
-        if(e.key === 'Enter' && !e.shiftKey) {
+        if(e.key === 'Enter' && e.ctrlKey) {
             e.preventDefault();
             btn.click();
         }
@@ -136,140 +122,134 @@ export function renderInputScreen(onSubmit) {
 }
 
 export function renderLoading() {
-    // Keep existing visual structure for loading or upgrade it? Let's upgrade it to be minimal.
-    const app = document.getElementById('app');
     app.innerHTML = `
-      <div class="min-h-screen flex flex-col items-center justify-center z-50 relative">
+      <div class="min-h-screen flex flex-col items-center justify-center z-50 relative" id="loading-screen">
         <div class="text-center space-y-8">
             <div class="relative w-32 h-32 mx-auto">
                 <div class="absolute inset-0 border-4 border-neo-pink rounded-full border-t-transparent animate-spin"></div>
-                <div class="absolute inset-2 border-4 border-neo-blue rounded-full border-b-transparent animate-spin-slow"></div>
+                <div class="absolute inset-2 border-4 border-neo-blue rounded-full border-b-transparent animate-spin-slow" style="animation-direction: reverse;"></div>
             </div>
-            <h2 class="font-display text-4xl text-white glitch-text" data-text="PROCESSING">PROCESSING</h2>
-            <div class="w-64 h-1 bg-white/20 mx-auto overflow-hidden">
-                <div class="h-full bg-neo-green w-0" id="progress-bar"></div>
-            </div>
-            <p class="font-mono text-xs text-white/50" id="loading-step">INITIALIZING_NEURAL_NET</p>
+            <h2 class="font-display text-4xl text-white">GENERATING</h2>
+            <p class="font-mono text-xs text-white/50" id="loading-step">ANALYZING_YOUR_VIBE</p>
         </div>
       </div>
     `;
-
-    gsap.to('#progress-bar', { width: '100%', duration: 4, ease: 'power1.inOut' });
     
-    const steps = ["ANALYZING_SEMANTICS", "EXTRACTING_VIBES", "GENERATING_PALETTE", "RENDERING_OUTPUT"];
+    const steps = ["READING_BETWEEN_LINES", "EXTRACTING_CHAOS", "BUILDING_TIMELINE", "RENDERING_STORY"];
     let i = 0;
-    setInterval(() => {
-        if(i < steps.length) {
-            document.getElementById('loading-step').innerText = steps[i++];
-        }
-    }, 800);
+    const interval = setInterval(() => {
+        const el = document.getElementById('loading-step');
+        if(el) el.innerText = steps[i++ % steps.length];
+        else clearInterval(interval);
+    }, 700);
 }
 
 export function renderResults(data) {
     const currentYear = new Date().getFullYear();
 
-    app.innerHTML = `
-      <div class="min-h-screen relative overflow-hidden flex flex-col pt-20 pb-12 px-4 md:px-8">
-        
-        <!-- HEADER -->
-        <header class="fixed top-0 left-0 w-full z-40 bg-black/50 backdrop-blur-md p-4 border-b border-white/10 flex justify-between items-center">
-             <div class="font-display text-xl text-white">WRAPPED <span class="text-neo-pink">${currentYear}</span></div>
-             <button id="reset-btn" class="neo-button px-4 py-2 text-sm !border-white/20">RESTART</button>
-        </header>
-
-        <!-- CONTENT GRID -->
-        <main class="w-full max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-6 relative z-10">
-            
-            <!-- SENTIMENT CARD (HERO) -->
-            <div class="col-span-1 md:col-span-8 neo-box p-8 md:p-16 flex flex-col justify-center items-start min-h-[400px] opacity-0" id="card-hero">
-                <div class="font-mono text-xs text-neo-pink mb-2">OVERALL_VIBE</div>
-                <h2 class="font-display text-6xl md:text-8xl leading-none mb-6 text-transparent bg-clip-text bg-gradient-to-r from-neo-yellow to-neo-pink">
-                    ${data.sentiment.label}
-                </h2>
-                <p class="text-xl md:text-2xl font-bold text-white/80 max-w-2xl leading-relaxed">
-                    "${data.narrative}"
-                </p>
-                <div class="absolute right-8 top-8 text-8xl opacity-20 rotate-12">${data.sentiment.emoji}</div>
+    // Generate sections HTML from data.months
+    const monthSections = data.months.map((month, i) => `
+        <section class="min-h-screen flex flex-col items-center justify-center px-8 py-20 relative section-month" data-mood="${month.mood}">
+            <div class="max-w-3xl w-full text-center">
+                <span class="text-6xl md:text-8xl mb-4 block">${month.emoji}</span>
+                <h2 class="font-display text-5xl md:text-7xl text-white mb-2 leading-none">${month.name}</h2>
+                <p class="font-mono text-neo-pink text-lg md:text-xl mb-8">"${month.title}"</p>
+                <p class="text-xl md:text-2xl text-white/80 leading-relaxed">${month.content}</p>
+                <div class="mt-8 inline-block px-6 py-2 border border-white/20 rounded-full text-white/50 font-mono text-sm">Mood: ${month.mood}</div>
             </div>
+        </section>
+    `).join('');
 
-            <!-- STATS COLUMN -->
-            <div class="col-span-1 md:col-span-4 space-y-6">
-                <!-- PALETTE -->
-                <div class="neo-box p-6 opacity-0" id="card-palette">
-                    <div class="font-mono text-xs text-white/50 mb-4">COLOR_PALETTE</div>
-                    <div class="flex flex-col gap-2">
-                        ${data.palette.map(c => `
-                            <div class="h-12 w-full flex items-center px-4 font-mono text-xs font-bold text-black hover:scale-105 transition-transform origin-left cursor-help" style="background-color: ${c}">
-                                ${c}
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
+    // Generate insights/stats sections
+    const insightsSection = `
+        <section class="min-h-screen flex flex-col items-center justify-center px-8 py-20 relative">
+            <div class="max-w-4xl w-full">
+                <h2 class="font-display text-5xl md:text-7xl text-neo-pink text-center mb-16">OVERARCHING INSIGHTS</h2>
+                <ul class="space-y-6">
+                    ${data.insights.map(ins => `<li class="text-xl md:text-2xl text-white/80 flex items-start gap-4"><span class="text-neo-green text-3xl">→</span>${ins}</li>`).join('')}
+                </ul>
+            </div>
+        </section>
+    `;
 
-                <!-- RADAR -->
-                <div class="neo-box p-6 aspect-square opacity-0 bg-black/80" id="card-radar">
-                     <canvas id="vibeChart"></canvas>
+    const phrasesSection = `
+        <section class="min-h-screen flex flex-col items-center justify-center px-8 py-20 relative">
+            <div class="max-w-4xl w-full">
+                <h2 class="font-display text-5xl md:text-7xl text-neo-yellow text-center mb-16">KEY PHRASES</h2>
+                <div class="flex flex-wrap justify-center gap-4">
+                    ${data.keyPhrases.map(p => `<span class="px-6 py-3 bg-white/5 border border-white/10 rounded-full text-xl text-white font-mono">"${p}"</span>`).join('')}
                 </div>
             </div>
+        </section>
+    `;
 
-            <!-- DETAILED STATS (WIDE) -->
-            <div class="col-span-1 md:col-span-12 neo-box p-8 opacity-0" id="card-stats">
-                 <div class="font-mono text-xs text-white/50 mb-6 border-b border-white/10 pb-2">VITAL_STATISTICS</div>
-                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+    const statsSection = `
+        <section class="min-h-screen flex flex-col items-center justify-center px-8 py-20 relative">
+            <div class="max-w-4xl w-full">
+                <h2 class="font-display text-5xl md:text-7xl text-neo-blue text-center mb-16">BY THE NUMBERS</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     ${data.stats.map(s => `
-                        <div>
-                            <div class="text-4xl font-display text-white mb-2">${s.value}%</div>
+                        <div class="neo-box p-6 text-center">
+                            <div class="text-4xl font-display text-white mb-2">${s.value}</div>
                             <div class="font-mono text-xs text-neo-pink uppercase">${s.label}</div>
-                            <div class="h-1 w-full bg-white/10 mt-2">
-                                <div class="h-full bg-neo-blue" style="width: ${s.value}%"></div>
-                            </div>
                         </div>
                     `).join('')}
-                 </div>
+                </div>
             </div>
-        </main>
+        </section>
+    `;
+
+    const finalSection = `
+        <section class="min-h-screen flex flex-col items-center justify-center px-8 py-20 relative">
+            <div class="max-w-3xl w-full text-center">
+                <h2 class="font-display text-6xl md:text-8xl text-white mb-8">THE VERDICT</h2>
+                <p class="text-2xl md:text-3xl text-white/90 leading-relaxed font-bold">${data.finalVerdict}</p>
+                <button id="reset-btn" class="neo-button mt-16">START OVER</button>
+            </div>
+        </section>
+    `;
+
+    app.innerHTML = `
+      <div class="relative overflow-x-hidden" id="results-container">
+        
+        <!-- HERO -->
+        <section class="min-h-screen flex flex-col items-center justify-center px-8 relative">
+            <div class="text-center">
+                <p class="font-mono text-xs text-neo-pink tracking-widest mb-4">${currentYear} WRAPPED</p>
+                <h1 class="font-display text-6xl md:text-8xl lg:text-9xl text-white leading-none mb-4">${data.userName}</h1>
+                <p class="text-xl md:text-2xl text-white/60 italic max-w-xl mx-auto">"${data.tagline}"</p>
+                <div class="mt-12 animate-bounce text-white/30 font-mono text-sm">SCROLL DOWN ↓</div>
+            </div>
+        </section>
+
+        ${monthSections}
+        ${insightsSection}
+        ${phrasesSection}
+        ${statsSection}
+        ${finalSection}
 
       </div>
     `;
     
     createIcons({ icons });
 
-    // Chart
-    const ctx = document.getElementById('vibeChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'radar',
-        data: {
-            labels: data.graph.labels,
-            datasets: [{
-                label: 'Vibe',
-                data: data.graph.data,
-                backgroundColor: 'rgba(255, 144, 232, 0.2)',
-                borderColor: '#FF90E8',
-                pointBackgroundColor: '#fff',
-                pointBorderColor: '#FF90E8'
-            }]
-        },
-        options: {
-            scales: {
-                r: {
-                    angleLines: { color: 'rgba(255,255,255,0.1)' },
-                    grid: { color: 'rgba(255,255,255,0.1)' },
-                    pointLabels: { color: 'rgba(255,255,255,0.7)', font: { family: 'Space Mono', size: 10 } },
-                    ticks: { display: false, backdropColor: 'transparent' }
-                }
+    // ScrollTrigger Animations for each section
+    gsap.utils.toArray('section').forEach((section, i) => {
+        gsap.from(section.querySelectorAll('h1, h2, p, li, span, div'), {
+            scrollTrigger: {
+                trigger: section,
+                start: 'top 80%',
+                toggleActions: 'play none none reverse'
             },
-            plugins: { legend: { display: false } }
-        }
+            y: 50,
+            opacity: 0,
+            duration: 0.8,
+            stagger: 0.1,
+            ease: 'power3.out'
+        });
     });
 
-    // Animations
-    const tl = gsap.timeline();
-    tl.to('#card-hero', { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' })
-      .to('#card-palette', { opacity: 1, x: 0, duration: 0.6 }, "-=0.4")
-      .to('#card-radar', { opacity: 1, x: 0, duration: 0.6 }, "-=0.4")
-      .to('#card-stats', { opacity: 1, y: 0, duration: 0.6 }, "-=0.2");
-
     document.getElementById('reset-btn').addEventListener('click', () => {
-         gsap.to('main', { opacity: 0, y: -20, duration: 0.5, onComplete: () => renderInputScreen(window._onSubmit) });
+         gsap.to('#results-container', { opacity: 0, y: -20, duration: 0.5, onComplete: () => renderInputScreen(window._onSubmit) });
     });
 }

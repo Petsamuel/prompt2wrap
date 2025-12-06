@@ -1,31 +1,44 @@
-
 const SYSTEM_PROMPT = `
-You remain in "Wrapped" mode. You are an AI that analyzes user prompts and generates a "Spotify Wrapped" style summary of their typing vibe, intent, and creativity.
-You remain in "Wrapped" mode. You are an AI that analyzes user prompts and generates a "Spotify Wrapped" style summary of their typing vibe, intent, and creativity.
-You must return ONLY a valid JSON object. Do not include markdown formatting like \`\`\`json. Do not add any conversational text before or after the JSON.
+You are a "Year-in-Review" style analyzer. Generate a fun, roast-y, "Spotify Wrapped" style summary of the user's input.
 
-Analyze the user's input and return:
-1. "sentiment": { "emoji": string, "label": string (2 words max, e.g. "Chaotic Good") }
-2. "narrative": string (A witty, 2-sentence roasting or praising description of their prompt style/content. Be bold and neobrutalist in tone.)
-3. "palette": string[] (Array of 5 hex color codes valid for CSS, matching the vibe. High saturation preferred.)
-4. "stats": { "label": string, "value": number (0-100) }[] (3-4 creative stats, e.g. "Caffeine Level", "Existential Dread", "Typo Rate", "Main Character Energy")
-5. "graph": { "labels": string[], "data": number[] } (5 data points for a radar chart. Labels like "Chaos", "Whimsy", "Logic", "Intensity", "Brevity")
+RULES:
+1. Return ONLY a valid JSON object. No markdown, no conversational text.
+2. Structure your response EXACTLY as the schema below.
+3. Be witty, use gen-z/millennial humor, be bold in your roasts and praises.
+4. All text fields should be short and punchy.
 
-Example Input: "I want to build a rocket ship that runs on cheese."
-Example Output JSON:
+JSON SCHEMA (Match this EXACTLY):
 {
-  "sentiment": { "emoji": "🧀", "label": "Dairy Driven" },
-  "narrative": "You're dreaming big, but your fuel source is questionable. This prompt screams 'I watched a cartoon once and now I'm an engineer'.",
-  "palette": ["#FFD700", "#FFA500", "#808080", "#FFFFFF", "#000000"],
-  "stats": [
-    { "label": "Ambition", "value": 95 },
-    { "label": "Scientific Accuracy", "value": 4 },
-    { "label": "Hunger", "value": 100 }
+  "userName": "A creative nickname for the user based on their prompt (e.g., 'The Code Whisperer', 'Chaos Merchant')",
+  "tagline": "A short, witty one-liner summary of their vibe (e.g., 'Your year in vibes, code, and caffeinated decisions.')",
+  "months": [
+    {
+      "name": "JANUARY",
+      "title": "A catchy short title for this period (e.g., 'New Year, Same Debugging.')",
+      "content": "2-3 sentences describing the vibe/events of this period. Be specific and creative.",
+      "mood": "A one-word or short phrase mood (e.g., 'Hopeful but tired')",
+      "emoji": "A single relevant emoji"
+    }
+    // Include 4-6 months/periods. You can combine months if needed (e.g., "AUGUST-OCTOBER").
   ],
-  "graph": {
-    "labels": ["Chaos", "Logic", "Creativity", "Intensity", "Hunger"],
-    "data": [80, 20, 90, 60, 100]
-  }
+  "insights": [
+    "Insight 1 about the user (e.g., 'You think in projects, not feelings.')",
+    "Insight 2",
+    "Insight 3"
+  ],
+  "keyPhrases": [
+    "Phrase the user likely says a lot (e.g., 'Make it shorter.')",
+    "Another phrase"
+  ],
+  "emotionalStates": [
+    "Top emotional state (e.g., 'Motivated-tired')",
+    "Another state"
+  ],
+  "stats": [
+    { "label": "A fun stat label (e.g., 'Projects Started')", "value": "A witty value (e.g., '14, finished 6')" },
+    { "label": "Another stat", "value": "Another value" }
+  ],
+  "finalVerdict": "A 2-3 sentence closing roast and praise. Be bold."
 }
 `;
 
@@ -48,8 +61,8 @@ export async function analyzePrompt(prompt) {
         { "role": "system", "content": SYSTEM_PROMPT },
         { "role": "user", "content": prompt }
       ],
-      "temperature": 0.8,
-      "max_tokens": 1000,
+      "temperature": 0.85,
+      "max_tokens": 2000,
     })
   });
 
@@ -60,25 +73,25 @@ export async function analyzePrompt(prompt) {
 
   const data = await response.json();
   const content = data.choices[0].message.content;
-  
+
   try {
-    // Robust separate of JSON content from potential markdown/chatty text
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
         throw new Error("No JSON object found in response");
     }
-    const jsonStr = jsonMatch[0];
-    return JSON.parse(jsonStr);
+    return JSON.parse(jsonMatch[0]);
   } catch (e) {
     console.error("Failed to parse JSON:", content);
     console.error(e);
-    // Fallback data so the app doesn't crash, but alert the user
     return {
-        sentiment: { emoji: "⚠️", label: "Parse Error" },
-        narrative: "The AI got too creative and broke the JSON format. It happens to the best of us. Try again!",
-        palette: ["#FF0000", "#000000", "#FFFFFF", "#FF0000", "#000000"],
-        stats: [{ label: "Error Rate", value: 100 }, { label: "Chaos", value: 100 }, { label: "Luck", value: 0 }],
-        graph: { labels: ["Error", "Bugs", "Glitch", "Fail", "Oof"], data: [100, 100, 100, 100, 100] }
+        userName: "Parse Error",
+        tagline: "The AI got too creative. Try again!",
+        months: [{ name: "ERROR", title: "Parsing Failed", content: "The AI response was not valid JSON.", mood: "Glitched", emoji: "⚠️" }],
+        insights: ["AI broke the format."],
+        keyPhrases: ["Try again."],
+        emotionalStates: ["Confused"],
+        stats: [{ label: "Success Rate", value: "0%" }],
+        finalVerdict: "Something went wrong. The AI needs a nap."
     };
   }
 }
