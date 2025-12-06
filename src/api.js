@@ -1,7 +1,8 @@
 
 const SYSTEM_PROMPT = `
 You remain in "Wrapped" mode. You are an AI that analyzes user prompts and generates a "Spotify Wrapped" style summary of their typing vibe, intent, and creativity.
-You must return ONLY a raw JSON object. Do not include markdown formatting like \`\`\`json.
+You remain in "Wrapped" mode. You are an AI that analyzes user prompts and generates a "Spotify Wrapped" style summary of their typing vibe, intent, and creativity.
+You must return ONLY a valid JSON object. Do not include markdown formatting like \`\`\`json. Do not add any conversational text before or after the JSON.
 
 Analyze the user's input and return:
 1. "sentiment": { "emoji": string, "label": string (2 words max, e.g. "Chaotic Good") }
@@ -61,10 +62,23 @@ export async function analyzePrompt(prompt) {
   const content = data.choices[0].message.content;
   
   try {
-    const jsonStr = content.replace(/```json\n?|\n?```/g, "").trim();
+    // Robust separate of JSON content from potential markdown/chatty text
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+        throw new Error("No JSON object found in response");
+    }
+    const jsonStr = jsonMatch[0];
     return JSON.parse(jsonStr);
   } catch (e) {
     console.error("Failed to parse JSON:", content);
-    throw new Error("Failed to parse analysis results. The AI got too creative.");
+    console.error(e);
+    // Fallback data so the app doesn't crash, but alert the user
+    return {
+        sentiment: { emoji: "⚠️", label: "Parse Error" },
+        narrative: "The AI got too creative and broke the JSON format. It happens to the best of us. Try again!",
+        palette: ["#FF0000", "#000000", "#FFFFFF", "#FF0000", "#000000"],
+        stats: [{ label: "Error Rate", value: 100 }, { label: "Chaos", value: 100 }, { label: "Luck", value: 0 }],
+        graph: { labels: ["Error", "Bugs", "Glitch", "Fail", "Oof"], data: [100, 100, 100, 100, 100] }
+    };
   }
 }

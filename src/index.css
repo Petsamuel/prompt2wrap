@@ -6,34 +6,60 @@
 
 @layer base {
   body {
-    @apply bg-neo-white text-neo-black font-sans selection:bg-neo-black selection:text-neo-white overflow-x-hidden;
+    @apply bg-transparent text-white font-sans selection:bg-neo-pink selection:text-black overflow-x-hidden;
+    /* Hide default cursor to use custom one if needed, or keep it simple for now */
   }
 }
 
 @layer components {
+
+  /* Extreme Glassmorphism */
+  /* Extreme Glassmorphism */
   .neo-box {
-    @apply border-4 border-neo-black shadow-neo bg-white transition-all duration-200 active:translate-x-1 active:translate-y-1 active:shadow-none;
+    @apply border border-white/20 bg-black/40 backdrop-blur-xl transition-all duration-300;
+    box-shadow: 0 0 15px rgba(35, 160, 255, 0.3);
+  }
+
+  .neo-box:hover {
+    @apply border-white/60;
+    box-shadow: 0 0 30px rgba(255, 144, 232, 0.5);
   }
 
   .neo-button {
-    @apply neo-box px-6 py-3 font-bold hover:bg-neo-yellow cursor-pointer text-lg uppercase;
+    @apply relative px-8 py-4 font-black text-xl uppercase tracking-widest overflow-hidden transition-all duration-300;
+    background: linear-gradient(90deg, transparent 5%, rgba(255, 255, 255, 0.1) 5%, rgba(255, 255, 255, 0.1) 95%, transparent 95%);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  }
+
+  .neo-button:hover {
+    @apply text-black border-neo-green;
+    background: #00ff94;
+    box-shadow: 0 0 20px #00ff94;
+    text-shadow: none;
   }
 
   .neo-input {
-    @apply neo-box p-4 w-full outline-none focus:bg-neo-pink/20 placeholder:text-neo-black/50 font-bold text-xl;
+    @apply w-full bg-black/50 border border-white/20 p-6 text-white text-2xl font-mono outline-none transition-all duration-300 placeholder:text-white/20;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+  }
+
+  .neo-input:focus {
+    @apply border-neo-pink bg-black/70;
+    box-shadow: 0 0 15px rgba(255, 144, 232, 0.5), inset 0 0 20px rgba(0, 0, 0, 0.8);
   }
 
   /* Custom scrollbar */
   ::-webkit-scrollbar {
-    width: 12px;
+    width: 6px;
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-white border-l-4 border-neo-black;
+    @apply bg-black;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-neo-black border-4 border-white hover:bg-neo-yellow;
+    @apply bg-neo-pink rounded-full;
   }
 }
 
