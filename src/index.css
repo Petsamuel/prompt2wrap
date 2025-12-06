@@ -437,3 +437,477 @@
   background-image: radial-gradient(#000 1.5px, transparent 1.5px);
   background-size: 24px 24px;
 }
+
+/* ====== UNIQUE 3D SECTION EFFECTS ====== */
+
+/* Base 3D perspective container */
+.perspective-container {
+  perspective: 1500px;
+  transform-style: preserve-3d;
+}
+
+/* Section 1: Hero - Dramatic depth with floating layers */
+.section-hero {
+  transform-style: preserve-3d;
+}
+
+.section-hero .hero-content {
+  transform: translateZ(100px);
+  animation: hero-float 6s ease-in-out infinite;
+}
+
+.section-hero::before {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  background: radial-gradient(ellipse at center, rgba(255, 144, 232, 0.15) 0%, transparent 50%);
+  transform: translateZ(-200px) scale(2);
+  animation: pulse-depth 8s ease-in-out infinite;
+}
+
+@keyframes hero-float {
+
+  0%,
+  100% {
+    transform: translateZ(100px) rotateX(0deg);
+  }
+
+  50% {
+    transform: translateZ(120px) rotateX(2deg);
+  }
+}
+
+@keyframes pulse-depth {
+
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: translateZ(-200px) scale(2);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translateZ(-150px) scale(2.2);
+  }
+}
+
+/* Section 2: Month Cards - Tilting 3D card effect */
+.section-month-card {
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.section-month-card:hover {
+  transform: rotateY(5deg) rotateX(-3deg) translateZ(30px);
+}
+
+.section-month-card .card-inner {
+  transform-style: preserve-3d;
+  position: relative;
+}
+
+.section-month-card .card-front {
+  backface-visibility: hidden;
+  transform: translateZ(20px);
+}
+
+.section-month-card .card-glow {
+  position: absolute;
+  inset: -20px;
+  background: linear-gradient(135deg, rgba(255, 144, 232, 0.3), transparent, rgba(35, 160, 255, 0.3));
+  filter: blur(40px);
+  transform: translateZ(-30px);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.section-month-card:hover .card-glow {
+  opacity: 1;
+}
+
+/* Floating icon ring for month sections */
+.floating-ring {
+  position: relative;
+  transform-style: preserve-3d;
+  animation: ring-rotate 20s linear infinite;
+}
+
+.floating-ring::before,
+.floating-ring::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: ring-pulse 3s ease-in-out infinite;
+}
+
+.floating-ring::before {
+  inset: -20px;
+  transform: rotateX(60deg) rotateZ(20deg);
+}
+
+.floating-ring::after {
+  inset: -40px;
+  transform: rotateX(70deg) rotateZ(-30deg);
+  animation-delay: 1s;
+}
+
+@keyframes ring-rotate {
+  from {
+    transform: rotateY(0deg);
+  }
+
+  to {
+    transform: rotateY(360deg);
+  }
+}
+
+@keyframes ring-pulse {
+
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: rotateX(60deg) scale(1);
+  }
+
+  50% {
+    opacity: 0.6;
+    transform: rotateX(60deg) scale(1.1);
+  }
+}
+
+/* Section 3: Insights - Parallax staggered layers */
+.section-insights {
+  transform-style: preserve-3d;
+}
+
+.section-insights .insight-item {
+  transform-style: preserve-3d;
+  transition: transform 0.4s ease;
+}
+
+.section-insights .insight-item:nth-child(1) {
+  transform: translateZ(0px);
+}
+
+.section-insights .insight-item:nth-child(2) {
+  transform: translateZ(20px);
+}
+
+.section-insights .insight-item:nth-child(3) {
+  transform: translateZ(40px);
+}
+
+.section-insights .insight-item:nth-child(4) {
+  transform: translateZ(60px);
+}
+
+.section-insights .insight-item:hover {
+  transform: translateZ(80px) scale(1.02);
+}
+
+.insight-arrow {
+  display: inline-block;
+  animation: arrow-pulse 1.5s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes arrow-pulse {
+
+  0%,
+  100% {
+    transform: translateX(0) scale(1);
+  }
+
+  50% {
+    transform: translateX(5px) scale(1.2);
+  }
+}
+
+/* Section 4: Key Phrases - Holographic shimmer effect */
+.section-phrases {
+  transform-style: preserve-3d;
+}
+
+.phrase-chip {
+  position: relative;
+  transform-style: preserve-3d;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  overflow: hidden;
+}
+
+.phrase-chip::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg,
+      transparent 40%,
+      rgba(255, 255, 255, 0.3) 45%,
+      rgba(255, 255, 255, 0.5) 50%,
+      rgba(255, 255, 255, 0.3) 55%,
+      transparent 60%);
+  transform: translateX(-100%);
+  animation: holographic-sweep 3s ease-in-out infinite;
+}
+
+.phrase-chip:hover {
+  transform: translateZ(30px) rotateX(-5deg) scale(1.05);
+  box-shadow: 0 20px 40px rgba(255, 144, 232, 0.3);
+}
+
+@keyframes holographic-sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  50%,
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Section 5: Stats - Floating orbiting cards */
+.section-stats {
+  transform-style: preserve-3d;
+}
+
+.stat-card {
+  transform-style: preserve-3d;
+  transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+  position: relative;
+}
+
+.stat-card::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 10%;
+  width: 80%;
+  height: 20px;
+  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.4) 0%, transparent 70%);
+  filter: blur(8px);
+  transform: translateZ(-50px) rotateX(90deg);
+  transition: all 0.5s ease;
+}
+
+.stat-card:hover {
+  transform: translateZ(50px) rotateX(-5deg) rotateY(5deg);
+}
+
+.stat-card:hover::after {
+  transform: translateZ(-80px) rotateX(90deg) scale(1.2);
+  opacity: 0.6;
+}
+
+/* Chart container 3D */
+.chart-container-3d {
+  transform-style: preserve-3d;
+  animation: chart-float 8s ease-in-out infinite;
+}
+
+@keyframes chart-float {
+
+  0%,
+  100% {
+    transform: translateZ(0) rotateY(0deg);
+  }
+
+  25% {
+    transform: translateZ(20px) rotateY(3deg);
+  }
+
+  75% {
+    transform: translateZ(20px) rotateY(-3deg);
+  }
+}
+
+/* Section 6: Final Verdict - Epic reveal with glow burst */
+.section-verdict {
+  transform-style: preserve-3d;
+}
+
+.verdict-container {
+  transform-style: preserve-3d;
+  animation: verdict-entrance 1s ease-out forwards;
+}
+
+.verdict-title {
+  transform: translateZ(80px);
+  text-shadow:
+    0 0 40px rgba(255, 255, 255, 0.5),
+    0 0 80px rgba(255, 144, 232, 0.5),
+    0 0 120px rgba(35, 160, 255, 0.3);
+}
+
+.verdict-text {
+  transform: translateZ(40px);
+}
+
+.verdict-button {
+  transform: translateZ(60px);
+}
+
+@keyframes verdict-entrance {
+  0% {
+    opacity: 0;
+    transform: translateZ(-200px) rotateX(30deg);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateZ(0) rotateX(0deg);
+  }
+}
+
+/* Radial burst effect behind verdict */
+.verdict-burst {
+  position: absolute;
+  inset: -100%;
+  background: conic-gradient(from 0deg,
+      transparent 0deg,
+      rgba(255, 144, 232, 0.1) 30deg,
+      transparent 60deg,
+      rgba(35, 160, 255, 0.1) 90deg,
+      transparent 120deg,
+      rgba(0, 255, 148, 0.1) 150deg,
+      transparent 180deg,
+      rgba(255, 201, 0, 0.1) 210deg,
+      transparent 240deg,
+      rgba(255, 144, 232, 0.1) 270deg,
+      transparent 300deg,
+      rgba(35, 160, 255, 0.1) 330deg,
+      transparent 360deg);
+  transform: translateZ(-100px);
+  animation: burst-rotate 30s linear infinite;
+}
+
+@keyframes burst-rotate {
+  from {
+    transform: translateZ(-100px) rotate(0deg);
+  }
+
+  to {
+    transform: translateZ(-100px) rotate(360deg);
+  }
+}
+
+/* ====== HELP TOOLTIP ====== */
+
+.help-button {
+  @apply fixed top-20 right-4 z-50 w-10 h-10 rounded-full border border-white/30 bg-black/40 backdrop-blur-md flex items-center justify-center cursor-pointer transition-all duration-300;
+}
+
+.help-button:hover {
+  @apply border-neo-pink bg-black/60;
+  box-shadow: 0 0 20px rgba(255, 144, 232, 0.4);
+}
+
+.help-button i {
+  @apply text-white/70 w-5 h-5 transition-colors duration-300;
+}
+
+.help-button:hover i {
+  @apply text-neo-pink;
+}
+
+.help-tooltip {
+  @apply fixed top-32 right-4 z-50 w-80 p-6 border border-white/20 bg-black/80 backdrop-blur-xl rounded-lg opacity-0 pointer-events-none transition-all duration-300 transform translate-y-2;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.help-tooltip.active {
+  @apply opacity-100 pointer-events-auto translate-y-0;
+}
+
+.help-tooltip h4 {
+  @apply font-display text-lg text-neo-pink mb-4;
+}
+
+.help-tooltip ul {
+  @apply space-y-3 text-sm text-white/70 font-mono;
+}
+
+.help-tooltip li {
+  @apply flex items-start gap-3;
+}
+
+.help-tooltip li::before {
+  content: '→';
+  @apply text-neo-green flex-shrink-0;
+}
+
+.help-tooltip .shortcut {
+  @apply inline-block px-2 py-0.5 bg-white/10 rounded text-xs text-white/50 ml-1;
+}
+
+/* ====== SCROLL INDICATOR ====== */
+
+.scroll-indicator {
+  @apply fixed bottom-8 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center gap-2 opacity-50 transition-opacity duration-300;
+}
+
+.scroll-indicator:hover {
+  @apply opacity-100;
+}
+
+.scroll-indicator .mouse {
+  @apply w-6 h-10 border-2 border-white/40 rounded-full relative;
+}
+
+.scroll-indicator .wheel {
+  @apply absolute top-2 left-1/2 -translate-x-1/2 w-1 h-2 bg-white/60 rounded-full;
+  animation: scroll-wheel 2s ease-in-out infinite;
+}
+
+@keyframes scroll-wheel {
+
+  0%,
+  100% {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+
+  50% {
+    transform: translateX(-50%) translateY(4px);
+    opacity: 0.3;
+  }
+}
+
+/* ====== SECTION PARALLAX DEPTH INDICATORS ====== */
+
+.depth-indicator {
+  @apply absolute bottom-4 right-4 font-mono text-xs text-white/20;
+}
+
+/* ====== AMBIENT PARTICLES PER SECTION ====== */
+
+.ambient-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: currentColor;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: particle-drift 10s linear infinite;
+}
+
+@keyframes particle-drift {
+  0% {
+    transform: translateY(0) translateX(0) scale(0);
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  90% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(-100vh) translateX(50px) scale(0.5);
+    opacity: 0;
+  }
+}
