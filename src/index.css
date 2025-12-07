@@ -5,9 +5,33 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 144, 232, 0.5) transparent;
+  }
+
   body {
     @apply bg-transparent text-white font-sans selection:bg-neo-pink selection:text-black overflow-x-hidden;
     /* Hide default cursor to use custom one if needed, or keep it simple for now */
+  }
+
+  /* Custom scrollbar for webkit */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 144, 232, 0.4);
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 144, 232, 0.6);
   }
 }
 
@@ -899,5 +923,398 @@
   100% {
     transform: translateY(-100vh) translateX(50px) scale(0.5);
     opacity: 0;
+  }
+}
+
+/* ====== SHARE MODAL ====== */
+
+.share-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(20px);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.share-modal.active {
+  opacity: 1;
+}
+
+.share-modal-content {
+  position: relative;
+  width: 100%;
+  max-width: 720px;
+  padding: 2rem;
+  background: rgba(10, 10, 10, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  box-shadow:
+    0 0 60px rgba(255, 144, 232, 0.15),
+    0 0 120px rgba(35, 160, 255, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transform: scale(0.95) translateY(20px);
+  transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.share-modal.active .share-modal-content {
+  transform: scale(1) translateY(0);
+}
+
+.share-close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.share-close-btn:hover {
+  border-color: #ff90e8;
+  color: #ff90e8;
+  background: rgba(255, 144, 232, 0.1);
+}
+
+.share-title {
+  font-family: 'Bebas Neue', 'Archivo Black', sans-serif;
+  font-size: 2rem;
+  letter-spacing: 0.1em;
+  color: white;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+/* Preview Container */
+.share-preview-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: 280px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #0a0a0a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 1.5rem;
+}
+
+.share-preview-container canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.share-preview-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.share-preview-overlay:hover {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.share-preview-overlay.hidden {
+  display: none;
+}
+
+.share-preview-overlay span {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 0.75rem 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 9999px;
+  transition: all 0.2s ease;
+}
+
+.share-preview-overlay:hover span {
+  border-color: #ff90e8;
+  color: #ff90e8;
+}
+
+/* Progress Container */
+.share-progress-container {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.share-progress-container.hidden {
+  display: none;
+}
+
+.share-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+
+.share-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #ff90e8, #23a0ff, #00ff94);
+  background-size: 200% 100%;
+  animation: gradient-shift 2s linear infinite;
+  transition: width 0.1s ease;
+}
+
+.share-progress-text {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Format Toggle */
+.share-format-toggle {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.format-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 140px;
+}
+
+.format-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.format-btn.active {
+  background: rgba(255, 144, 232, 0.15);
+  border-color: #ff90e8;
+  color: white;
+}
+
+.format-icon {
+  width: 24px;
+  height: 24px;
+  stroke: currentColor;
+  transition: stroke 0.2s ease;
+}
+
+.format-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Action Buttons */
+.share-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.share-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 2rem;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.share-btn.primary {
+  background: linear-gradient(135deg, #ff90e8 0%, #23a0ff 100%);
+  border: none;
+  color: black;
+}
+
+.share-btn.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(255, 144, 232, 0.4);
+}
+
+.share-btn.primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.share-btn.secondary {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+}
+
+.share-btn.secondary:hover {
+  border-color: #00ff94;
+  color: #00ff94;
+}
+
+.share-note {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+}
+
+/* Secondary button style for Share button in verdict */
+.neo-button-secondary {
+  @apply relative px-6 py-3 font-bold text-base uppercase tracking-widest overflow-hidden transition-all duration-300;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.neo-button-secondary:hover {
+  @apply border-neo-pink text-neo-pink;
+  box-shadow: 0 0 20px rgba(255, 144, 232, 0.3);
+}
+
+.neo-button-secondary svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .share-modal-content {
+    padding: 1.5rem;
+  }
+
+  .share-title {
+    font-size: 1.5rem;
+  }
+
+  .share-format-toggle {
+    flex-direction: column;
+  }
+
+  .format-btn {
+    flex-direction: row;
+    justify-content: center;
+    min-width: 100%;
+  }
+
+  .share-actions {
+    flex-direction: column;
+  }
+
+  .share-btn {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .share-preview-container {
+    max-height: 200px;
+  }
+}
+
+/* ====== MUSIC TOGGLE ====== */
+
+.music-toggle {
+  position: fixed;
+  bottom: 2rem;
+  left: 2rem;
+  z-index: 100;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 10, 10, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.music-toggle:hover {
+  background: rgba(30, 30, 30, 0.9);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+.music-toggle .music-icon {
+  width: 20px;
+  height: 20px;
+  color: rgba(255, 255, 255, 0.5);
+  transition: color 0.2s ease;
+}
+
+.music-toggle .music-off {
+  display: block;
+}
+
+.music-toggle .music-on {
+  display: none;
+}
+
+.music-toggle.active {
+  border-color: #ff90e8;
+  box-shadow: 0 0 20px rgba(255, 144, 232, 0.3);
+}
+
+.music-toggle.active .music-icon {
+  color: #ff90e8;
+}
+
+.music-toggle.active .music-off {
+  display: none;
+}
+
+.music-toggle.active .music-on {
+  display: block;
+}
+
+@media (max-width: 640px) {
+  .music-toggle {
+    bottom: 1rem;
+    left: 1rem;
+    width: 40px;
+    height: 40px;
+  }
+
+  .music-toggle .music-icon {
+    width: 18px;
+    height: 18px;
   }
 }

@@ -3,6 +3,8 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Chart from 'chart.js/auto';
 import { setMood, setChaosLevel } from './background.js';
+import { openShareModal } from './shareCapture.js';
+import { createMusicToggle, initMusicToggle } from './music.js';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -60,18 +62,18 @@ export function renderInputScreen(onSubmit) {
                  <p class="font-mono text-white/60">Daily limit reached. Recharge required.</p>
                </div>
              ` : `
-               <label class="block font-mono text-xs text-neo-pink mb-4 tracking-widest">PASTE YOUR CONVERSATION / PROMPT HISTORY</label>
+               <label class="block font-mono text-xs text-neo-pink mb-4 tracking-widest">PASTE YOUR PROMPTS OR CHATGPT SHARE LINK</label>
                <textarea 
                  id="prompt-input" 
                  rows="5" 
                  class="neo-input bg-transparent border-none text-xl md:text-2xl text-white font-bold placeholder:text-white/20 focus:ring-0 resize-none leading-tight" 
-                 placeholder="Paste your year's worth of prompts, your vibe check, or just describe your journey..."></textarea>
+                 placeholder="Paste prompts, describe your year, or drop a ChatGPT share link..."></textarea>
                
                <div class="mt-8 flex items-center justify-between border-t border-white/10 pt-6">
                  <div class="flex items-center gap-4 text-xs font-mono text-white/40">
                     <span>${remaining}/${max} CREDITS</span>
                  </div>
-                 <button id="generate-btn" class="neo-button group !text-lg">
+                 <button id="generate-btn" class="neo-button group !text-sm md:!text-lg">
                     <span class="relative z-10 group-hover:text-black ">GENERATE WRAPPED</span>
                  </button>
                </div>
@@ -169,6 +171,14 @@ export function renderInputScreen(onSubmit) {
 
       closeHelpBtn.addEventListener('click', closeAction);
   }
+
+  // Add music toggle to the page (only if not already there)
+  if (!document.getElementById('music-toggle')) {
+    const musicContainer = document.createElement('div');
+    musicContainer.innerHTML = createMusicToggle();
+    document.body.appendChild(musicContainer.firstElementChild);
+  }
+  initMusicToggle();
 }
 
 function renderHelpOverlay() {
@@ -274,7 +284,7 @@ export function renderResults(data) {
     const insightsSection = `
         <section class="min-h-screen flex flex-col items-center justify-center px-8 py-20 relative">
             <div class="max-w-4xl w-full">
-                <h2 class="font-display text-5xl md:text-7xl text-neo-pink text-center mb-16">OVERARCHING INSIGHTS</h2>
+                <h2 class="font-display text-5xl md:text-7xl text-neo-pink text-center mb-16">YOUR INSIGHTS</h2>
                 <ul class="space-y-6">
                     ${data.insights.map(ins => `<li class="text-xl md:text-2xl text-white/80 flex items-start gap-4"><span class="text-neo-green text-3xl">→</span>${ins}</li>`).join('')}
                 </ul>
@@ -285,7 +295,7 @@ export function renderResults(data) {
     const phrasesSection = `
         <section class="min-h-screen flex flex-col items-center justify-center px-8 py-20 relative">
             <div class="max-w-4xl w-full">
-                <h2 class="font-display text-5xl md:text-7xl text-neo-yellow text-center mb-16">KEY PHRASES</h2>
+                <h2 class="font-display text-5xl md:text-7xl text-neo-yellow text-center mb-16">YOUR QUOTES</h2>
                 <div class="flex flex-wrap justify-center gap-4">
                     ${data.keyPhrases.map(p => `<span class="px-6 py-3 bg-white/5 border border-white/10 rounded-full text-xl text-white font-mono">"${p}"</span>`).join('')}
                 </div>
@@ -293,16 +303,123 @@ export function renderResults(data) {
         </section>
     `;
 
+    // ===== NEW: Topic Distribution Section =====
+    const topicsSection = data.topTopics ? `
+        <section class="min-h-screen flex flex-col items-center justify-center px-8 py-20 relative" id="topics-section">
+            <div class="max-w-5xl w-full">
+                <h2 class="font-display text-5xl md:text-7xl text-neo-green text-center mb-16">WHAT YOU TALKED ABOUT</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                    <!-- Donut Chart -->
+                    <div class="neo-box p-8 aspect-square flex items-center justify-center max-w-md mx-auto w-full">
+                        <canvas id="topicsChart"></canvas>
+                    </div>
+                    <!-- Topic List -->
+                    <div class="space-y-4">
+                        ${data.topTopics.map((t, i) => {
+                            const colors = ['#ff90e8', '#23a0ff', '#00ff94', '#ffc900', '#ff6464'];
+                            return `
+                            <div class="flex items-center gap-4">
+                                <div class="w-4 h-4 rounded-sm" style="background: ${colors[i % colors.length]}"></div>
+                                <div class="flex-1">
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span class="text-white font-medium">${t.topic}</span>
+                                        <span class="text-white/60 font-mono text-sm">${t.percentage}%</span>
+                                    </div>
+                                    <div class="h-2 bg-white/10 rounded-full overflow-hidden">
+                                        <div class="h-full rounded-full transition-all duration-1000" style="width: ${t.percentage}%; background: ${colors[i % colors.length]}"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        `}).join('')}
+                    </div>
+                </div>
+            </div>
+        </section>
+    ` : '';
+
+    // ===== NEW: Personality Traits Radar Section =====
+    const personalitySection = data.personalityTraits ? `
+        <section class="min-h-screen flex flex-col items-center justify-center px-8 py-20 relative" id="personality-section">
+            <div class="max-w-5xl w-full">
+                <h2 class="font-display text-5xl md:text-7xl text-neo-blue text-center mb-16">YOUR PERSONALITY</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                    <!-- Radar Chart -->
+                    <div class="neo-box p-8 aspect-square flex items-center justify-center max-w-md mx-auto w-full">
+                        <canvas id="personalityChart"></canvas>
+                    </div>
+                    <!-- Traits Breakdown -->
+                    <div class="space-y-6">
+                        ${Object.entries(data.personalityTraits).map(([trait, score]) => `
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-white font-display text-xl uppercase">${trait}</span>
+                                    <span class="text-neo-pink font-mono text-lg">${score}%</span>
+                                </div>
+                                <div class="h-3 bg-white/10 rounded-full overflow-hidden">
+                                    <div class="h-full bg-gradient-to-r from-neo-pink to-neo-blue rounded-full transition-all duration-1000" style="width: ${score}%"></div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        </section>
+    ` : '';
+
+    // ===== NEW: Communication Style Section =====
+    const communicationSection = data.communicationStyle ? `
+        <section class="min-h-screen flex flex-col items-center justify-center px-8 py-20 relative">
+            <div class="max-w-3xl w-full text-center">
+                <h2 class="font-display text-5xl md:text-7xl text-neo-pink text-center mb-8">YOUR STYLE</h2>
+                <div class="neo-box p-8 md:p-12">
+                    <p class="font-mono text-xs text-neo-green uppercase tracking-widest mb-4">Communication Type</p>
+                    <h3 class="font-display text-4xl md:text-6xl text-white mb-6">${data.communicationStyle.type}</h3>
+                    <p class="text-xl text-white/70 mb-8">${data.communicationStyle.description}</p>
+                    <div class="flex flex-wrap justify-center gap-3 mb-8">
+                        ${data.communicationStyle.strengths.map(s => `
+                            <span class="px-4 py-2 bg-neo-green/20 border border-neo-green/50 rounded-full text-neo-green font-mono text-sm">✓ ${s}</span>
+                        `).join('')}
+                    </div>
+                    <div class="text-sm text-white/50 font-mono">
+                        Growth area: <span class="text-neo-yellow">${data.communicationStyle.improvement}</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    ` : '';
+
+    // ===== NEW: Fun Facts Section =====
+    const funFactsSection = data.funFacts ? `
+        <section class="min-h-screen flex flex-col items-center justify-center px-8 py-20 relative">
+            <div class="max-w-4xl w-full">
+                <h2 class="font-display text-5xl md:text-7xl text-neo-yellow text-center mb-16">FUN FACTS</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    ${data.funFacts.map((fact, i) => {
+                        const icons = ['zap', 'sparkles', 'target'];
+                        const colors = ['neo-pink', 'neo-blue', 'neo-green'];
+                        return `
+                        <div class="neo-box p-6 text-center transform hover:scale-105 transition-transform">
+                            <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-${colors[i % colors.length]}/20 flex items-center justify-center">
+                                <i data-lucide="${icons[i % icons.length]}" class="w-6 h-6 text-${colors[i % colors.length]}"></i>
+                            </div>
+                            <p class="text-white/80 text-sm leading-relaxed">${fact}</p>
+                        </div>
+                    `}).join('')}
+                </div>
+            </div>
+        </section>
+    ` : '';
+
     const statsSection = `
         <section class="min-h-screen flex flex-col items-center justify-center px-8 py-20 relative" id="stats-section">
             <div class="max-w-5xl w-full">
-                <h2 class="font-display text-5xl md:text-7xl text-neo-blue text-center mb-16">BY THE NUMBERS</h2>
+                <h2 class="font-display text-5xl md:text-7xl text-neo-blue text-center mb-16">YOUR NUMBERS</h2>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                     <!-- Stats Cards -->
                     <div class="grid grid-cols-2 gap-4">
                         ${data.stats.map((s, i) => `
                             <div class="neo-box p-6 text-center transform hover:scale-105 transition-transform">
-                                <div class="text-xl md:text-4xl font-display text-white mb-2">${s.value}</div>
+                                <div class="text-xl md:text-xl font-display text-white mb-2">${s.value}</div>
                                 <div class="font-mono text-xs text-neo-pink uppercase">${s.label}</div>
                             </div>
                         `).join('')}
@@ -319,9 +436,15 @@ export function renderResults(data) {
     const finalSection = `
         <section class="min-h-screen flex flex-col items-center justify-center px-8 py-20 relative">
             <div class="max-w-3xl w-full text-center">
-                <h2 class="font-display text-6xl md:text-8xl text-white mb-8">THE VERDICT</h2>
+                <h2 class="font-display text-6xl md:text-8xl text-white mb-8">YOUR MOMENT</h2>
                 <p class="text-2xl md:text-3xl text-white/90 leading-relaxed font-bold">${data.finalVerdict}</p>
-                <button id="reset-btn" class="neo-button mt-16">START OVER</button>
+                <div class="mt-16 flex flex-col sm:flex-row gap-4 justify-center items-center">
+                    <button id="share-btn" class="neo-button-secondary">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                        SHARE
+                    </button>
+                    <button id="reset-btn" class="neo-button">START OVER</button>
+                </div>
             </div>
         </section>
     `;
@@ -329,19 +452,39 @@ export function renderResults(data) {
     app.innerHTML = `
       <div class="relative overflow-x-hidden" id="results-container">
         
+        <!-- PROGRESS INDICATOR BARS (Stories-style) -->
+        <div id="progress-bars" class="fixed top-0 left-0 right-0 z-50 flex gap-1 px-4 py-3 bg-gradient-to-b from-black/60 to-transparent">
+            ${Array.from({length: data.months.length + 8}, (_, i) => `
+                <div class="progress-bar-segment flex-1 h-1 bg-white/20 rounded-full overflow-hidden">
+                    <div class="progress-bar-fill h-full bg-white rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+            `).join('')}
+        </div>
+        
+        <!-- AUTO-SCROLL TOGGLE -->
+        <button id="auto-scroll-toggle" class="fixed top-8 right-4 z-50 px-4 py-2 bg-black/50 backdrop-blur-md border border-white/20 rounded-full font-mono text-xs text-white/70 hover:text-white hover:border-neo-pink transition-all flex items-center gap-2">
+            <svg id="auto-scroll-play" class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <svg id="auto-scroll-pause" class="w-4 h-4 hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            <span id="auto-scroll-label">AUTO</span>
+        </button>
+        
         <!-- HERO -->
         <section class="min-h-screen flex flex-col items-center justify-center px-8 relative">
             <div class="text-center">
                 <p class="font-mono text-xs text-neo-pink tracking-widest mb-4">${currentYear} WRAPPED</p>
                 <h1 class="font-display text-6xl md:text-8xl lg:text-9xl text-white leading-none mb-4">${data.userName}</h1>
                 <p class="text-xl md:text-2xl text-white/60 italic max-w-xl mx-auto">"${data.tagline}"</p>
-                <div class="mt-12 animate-bounce text-white/30 font-mono text-sm">SCROLL DOWN ↓</div>
+                <div class="mt-12 animate-bounce text-white/30 font-mono text-sm" id="scroll-hint">TAP AUTO OR SCROLL ↓</div>
             </div>
         </section>
 
         ${monthSections}
         ${insightsSection}
         ${phrasesSection}
+        ${topicsSection}
+        ${personalitySection}
+        ${communicationSection}
+        ${funFactsSection}
         ${statsSection}
         ${finalSection}
 
@@ -432,7 +575,198 @@ export function renderResults(data) {
         });
     }
 
+    // ===== NEW: Topics Donut Chart =====
+    const topicsCanvas = document.getElementById('topicsChart');
+    if (topicsCanvas && data.topTopics && data.topTopics.length > 0) {
+        const topicsCtx = topicsCanvas.getContext('2d');
+        new Chart(topicsCtx, {
+            type: 'doughnut',
+            data: {
+                labels: data.topTopics.map(t => t.topic),
+                datasets: [{
+                    data: data.topTopics.map(t => t.percentage),
+                    backgroundColor: [
+                        'rgba(255, 144, 232, 0.8)',
+                        'rgba(35, 160, 255, 0.8)',
+                        'rgba(0, 255, 148, 0.8)',
+                        'rgba(255, 201, 0, 0.8)',
+                        'rgba(255, 100, 100, 0.8)'
+                    ],
+                    borderColor: 'rgba(0, 0, 0, 0.3)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                cutout: '60%',
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+
+    // ===== NEW: Personality Radar Chart =====
+    const personalityCanvas = document.getElementById('personalityChart');
+    if (personalityCanvas && data.personalityTraits) {
+        const personalityCtx = personalityCanvas.getContext('2d');
+        const traits = Object.keys(data.personalityTraits);
+        const scores = Object.values(data.personalityTraits);
+        
+        new Chart(personalityCtx, {
+            type: 'radar',
+            data: {
+                labels: traits.map(t => t.charAt(0).toUpperCase() + t.slice(1)),
+                datasets: [{
+                    label: 'Your Profile',
+                    data: scores,
+                    backgroundColor: 'rgba(255, 144, 232, 0.3)',
+                    borderColor: 'rgba(255, 144, 232, 1)',
+                    borderWidth: 2,
+                    pointBackgroundColor: 'rgba(255, 144, 232, 1)',
+                    pointBorderColor: '#fff',
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: { 
+                            display: false,
+                            stepSize: 25
+                        },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        angleLines: { color: 'rgba(255, 255, 255, 0.15)' },
+                        pointLabels: {
+                            color: 'rgba(255, 255, 255, 0.7)',
+                            font: { family: 'Space Mono', size: 11 }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    }
+
+    // Share button handler
+    document.getElementById('share-btn').addEventListener('click', () => {
+        openShareModal(data);
+    });
+
     document.getElementById('reset-btn').addEventListener('click', () => {
          gsap.to('#results-container', { opacity: 0, y: -20, duration: 0.5, onComplete: () => renderInputScreen(window._onSubmit) });
     });
+
+    // ========== AUTO-SCROLL FUNCTIONALITY ==========
+    let autoScrollEnabled = false;
+    let autoScrollInterval = null;
+    const sections = document.querySelectorAll('section');
+    let currentSectionIndex = 0;
+    const AUTO_SCROLL_DELAY = 5000; // 5 seconds per section
+
+    const autoScrollBtn = document.getElementById('auto-scroll-toggle');
+    const playIcon = document.getElementById('auto-scroll-play');
+    const pauseIcon = document.getElementById('auto-scroll-pause');
+    const scrollLabel = document.getElementById('auto-scroll-label');
+
+    function scrollToSection(index) {
+        if (index >= sections.length) {
+            // Reached the end, stop auto-scroll
+            stopAutoScroll();
+            return;
+        }
+        currentSectionIndex = index;
+        sections[index].scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function startAutoScroll() {
+        autoScrollEnabled = true;
+        playIcon.classList.add('hidden');
+        pauseIcon.classList.remove('hidden');
+        autoScrollBtn.classList.add('border-neo-pink', 'text-neo-pink');
+        scrollLabel.textContent = 'PLAYING';
+        
+        // Scroll to next section immediately
+        currentSectionIndex++;
+        scrollToSection(currentSectionIndex);
+        
+        // Then continue every 5 seconds
+        autoScrollInterval = setInterval(() => {
+            currentSectionIndex++;
+            scrollToSection(currentSectionIndex);
+        }, AUTO_SCROLL_DELAY);
+    }
+
+    function stopAutoScroll() {
+        autoScrollEnabled = false;
+        clearInterval(autoScrollInterval);
+        autoScrollInterval = null;
+        playIcon.classList.remove('hidden');
+        pauseIcon.classList.add('hidden');
+        autoScrollBtn.classList.remove('border-neo-pink', 'text-neo-pink');
+        scrollLabel.textContent = 'AUTO';
+    }
+
+    autoScrollBtn.addEventListener('click', () => {
+        if (autoScrollEnabled) {
+            stopAutoScroll();
+        } else {
+            startAutoScroll();
+        }
+    });
+
+    // ========== PROGRESS BAR UPDATE ==========
+    const progressFills = document.querySelectorAll('.progress-bar-fill');
+    
+    function updateProgressBars(activeIndex) {
+        progressFills.forEach((fill, index) => {
+            if (index < activeIndex) {
+                // Past sections are fully filled
+                fill.style.width = '100%';
+            } else if (index === activeIndex) {
+                // Current section is active (full or animating)
+                fill.style.width = '100%';
+            } else {
+                // Future sections are empty
+                fill.style.width = '0%';
+            }
+        });
+    }
+
+    // Initial progress bar state
+    updateProgressBars(0);
+
+    // Update on scroll
+    let scrollTimeout;
+    window.addEventListener('scroll', () => {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+            // Find which section is most visible
+            let activeIndex = 0;
+            sections.forEach((section, index) => {
+                const rect = section.getBoundingClientRect();
+                if (rect.top < window.innerHeight / 2 && rect.bottom > 0) {
+                    activeIndex = index;
+                }
+            });
+            
+            // Update progress bars
+            updateProgressBars(activeIndex);
+            
+            // Update current section for auto-scroll
+            if (autoScrollEnabled) {
+                currentSectionIndex = activeIndex;
+            }
+        }, 50);
+    }, { passive: true });
 }
+
