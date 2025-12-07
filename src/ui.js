@@ -71,8 +71,8 @@ export function renderInputScreen(onSubmit) {
                  <div class="flex items-center gap-4 text-xs font-mono text-white/40">
                     <span>${remaining}/${max} CREDITS</span>
                  </div>
-                 <button id="generate-btn" class="neo-button group">
-                    <span class="relative z-10 group-hover:text-black !text-xl">GENERATE WRAPPED</span>
+                 <button id="generate-btn" class="neo-button group !text-lg">
+                    <span class="relative z-10 group-hover:text-black ">GENERATE WRAPPED</span>
                  </button>
                </div>
              `}
@@ -302,7 +302,7 @@ export function renderResults(data) {
                     <div class="grid grid-cols-2 gap-4">
                         ${data.stats.map((s, i) => `
                             <div class="neo-box p-6 text-center transform hover:scale-105 transition-transform">
-                                <div class="text-3xl md:text-4xl font-display text-white mb-2">${s.value}</div>
+                                <div class="text-xl md:text-4xl font-display text-white mb-2">${s.value}</div>
                                 <div class="font-mono text-xs text-neo-pink uppercase">${s.label}</div>
                             </div>
                         `).join('')}
