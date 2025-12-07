@@ -37,40 +37,45 @@
 
 @layer components {
 
-  /* Extreme Glassmorphism */
-  /* Extreme Glassmorphism */
+  /* Clean Glassmorphism - minimal shadows */
   .neo-box {
-    @apply border border-white/20 bg-black/40 backdrop-blur-xl transition-all duration-300;
-    box-shadow: 0 0 15px rgba(35, 160, 255, 0.3);
+    @apply border border-white/15 bg-black/50 backdrop-blur-xl transition-all duration-300;
   }
 
   .neo-box:hover {
-    @apply border-white/60;
-    box-shadow: 0 0 30px rgba(255, 144, 232, 0.5);
+    @apply border-white/30;
   }
 
   .neo-button {
     @apply relative px-8 py-4 font-black text-xl uppercase tracking-widest overflow-hidden transition-all duration-300;
-    background: linear-gradient(90deg, transparent 5%, rgba(255, 255, 255, 0.1) 5%, rgba(255, 255, 255, 0.1) 95%, transparent 95%);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    background: linear-gradient(90deg, transparent 5%, rgba(255, 255, 255, 0.08) 5%, rgba(255, 255, 255, 0.08) 95%, transparent 95%);
+    border: 1px solid rgba(255, 255, 255, 0.2);
   }
 
   .neo-button:hover {
-    @apply text-black border-neo-green;
-    background: #00ff94;
-    box-shadow: 0 0 20px #00ff94;
-    text-shadow: none;
+    @apply text-black;
+    background: #ff90e8;
+    border-color: #ff90e8;
+  }
+
+  /* Secondary button style */
+  .neo-button-secondary {
+    @apply relative px-6 py-3 font-bold text-sm uppercase tracking-wider overflow-hidden transition-all duration-300 flex items-center gap-2;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .neo-button-secondary:hover {
+    background: rgba(255, 144, 232, 0.2);
+    border-color: #ff90e8;
   }
 
   .neo-input {
-    @apply w-full bg-black/50 border border-white/20 p-6 text-white text-2xl font-mono outline-none transition-all duration-300 placeholder:text-white/20;
-    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+    @apply w-full bg-black/60 border border-white/15 p-6 text-white text-2xl font-mono outline-none transition-all duration-300 placeholder:text-white/30;
   }
 
   .neo-input:focus {
     @apply border-neo-pink bg-black/70;
-    box-shadow: 0 0 15px rgba(255, 144, 232, 0.5), inset 0 0 20px rgba(0, 0, 0, 0.8);
   }
 
   /* Custom scrollbar */
