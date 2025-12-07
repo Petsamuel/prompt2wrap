@@ -843,13 +843,13 @@ export class ShareModalController {
                 </div>
                 
                 <div class="share-format-toggle">
-                    <button class="format-btn active" data-format="webm">
-                        <svg class="format-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.934a.5.5 0 0 0-.777-.416L16 11"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>
-                        <span class="format-label">WebM (HD)</span>
+                    <button class="format-btn active" data-format="gif">
+                        <svg class="format-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h2v6H9z"/><path d="M15 13h-2v2h2z"/><path d="M15 9h-2v2h2"/></svg>
+                        <span class="format-label">GIF (Universal)</span>
                     </button>
                     <button class="format-btn" data-format="gif">
-                        <svg class="format-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h2v6H9z"/><path d="M15 13h-2v2h2z"/><path d="M15 9h-2v2h2"/></svg>
-                        <span class="format-label">GIF (Social)</span>
+                        <svg class="format-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.934a.5.5 0 0 0-.777-.416L16 11"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>
+                        <span class="format-label">WebM (Chrome)</span>
                     </button>
                 </div>
                 
