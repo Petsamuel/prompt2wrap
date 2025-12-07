@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'https://www.prompt2wrap.vercel.app'],
+  origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'https://prompt2wrap.vercel.app', 'https://www.prompt2wrap.vercel.app'],
   methods: ['GET', 'POST'],
   credentials: true
 }));
@@ -177,6 +177,11 @@ app.post('/api/analyze', async (req, res) => {
     return res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 });
+
+app.get('/', (req, res) => {
+  res.send('silence is golden');
+});
+
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
