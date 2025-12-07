@@ -347,7 +347,6 @@ export function renderResults(data) {
                     <div class="neo-box p-8 aspect-square flex items-center justify-center max-w-md mx-auto w-full">
                         <canvas id="personalityChart"></canvas>
                     </div>
-                    <!-- Traits Breakdown -->
                     <div class="space-y-6">
                         ${Object.entries(data.personalityTraits).map(([trait, score]) => `
                             <div>
@@ -356,7 +355,7 @@ export function renderResults(data) {
                                     <span class="text-neo-pink font-mono text-lg">${score}%</span>
                                 </div>
                                 <div class="h-3 bg-white/10 rounded-full overflow-hidden">
-                                    <div class="h-full bg-gradient-to-r from-neo-pink to-neo-blue rounded-full transition-all duration-1000" style="width: ${score}%"></div>
+                                    <div class="h-full rounded-full" style="width: ${score}%; background: linear-gradient(to right, #ff90e8, #23a0ff);"></div>
                                 </div>
                             </div>
                         `).join('')}
@@ -657,9 +656,75 @@ export function renderResults(data) {
         });
     }
 
-    // Share button handler
-    document.getElementById('share-btn').addEventListener('click', () => {
-        openShareModal(data);
+    // Share button handler - try native share first, fall back to modal
+    document.getElementById('share-btn').addEventListener('click', async () => {
+        const shareBtn = document.getElementById('share-btn');
+        const originalText = shareBtn.innerHTML;
+        
+        try {
+            // Import share capture classes
+            const { HighlightReel, GifConverter } = await import('./shareCapture.js');
+            
+            // Show loading state
+            shareBtn.innerHTML = '<span class="animate-pulse">Creating GIF...</span>';
+            shareBtn.disabled = true;
+            
+            // Create highlight reel
+            const reel = new HighlightReel(data);
+            const gifConverter = new GifConverter();
+            await gifConverter.loadLibrary();
+            
+            // Capture frames
+            const frames = [];
+            let frameCount = 0;
+            const targetFrames = 150; // ~5 seconds at 30fps equivalent
+            const skipFrames = 9; // Capture every 9th frame to reduce size
+            
+            reel.onFrame((canvas) => {
+                frameCount++;
+                if (frameCount % skipFrames === 0 && frames.length < targetFrames) {
+                    frames.push(canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height));
+                }
+            });
+            
+            await new Promise((resolve) => {
+                reel.onComplete(resolve);
+                reel.start();
+            });
+            
+            // Convert to GIF
+            shareBtn.innerHTML = '<span class="animate-pulse">Generating GIF...</span>';
+            const gifBlob = await gifConverter.convert(frames, reel.getCanvas().width, reel.getCanvas().height);
+            
+            // Create file for sharing
+            const file = new File([gifBlob], 'my-wrapped.gif', { type: 'image/gif' });
+            
+            // Check if native share is available and can share files
+            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    files: [file],
+                    title: 'My Prompt2Wrapped',
+                    text: `Check out my ${new Date().getFullYear()} Wrapped!`
+                });
+            } else {
+                // Fallback: download the file
+                const url = URL.createObjectURL(gifBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'my-wrapped.gif';
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+            
+        } catch (err) {
+            console.error('Share failed:', err);
+            // Fall back to modal
+            openShareModal(data);
+        } finally {
+            // Restore button
+            shareBtn.innerHTML = originalText;
+            shareBtn.disabled = false;
+        }
     });
 
     document.getElementById('reset-btn').addEventListener('click', () => {

@@ -12,7 +12,7 @@ import { createIcons, icons } from 'lucide';
 const CANVAS_WIDTH = 1920;
 const CANVAS_HEIGHT = 1080;
 const FPS = 30;
-const TOTAL_DURATION = 30000; // 30 seconds in ms - extended for more content
+const TOTAL_DURATION = 45000; // 45 seconds - extended to show all content
 
 // Color palette matching the app
 const COLORS = {
@@ -91,19 +91,22 @@ export class HighlightReel {
         // Draw animated particles background
         this.drawParticles(elapsed);
         
-        // Determine phase and render (adjusted for 30s duration)
-        if (progress < 0.1) {
-            // Intro: 0-3s (0-10%)
-            this.renderIntro(progress / 0.1);
-        } else if (progress < 0.5) {
-            // Months: 3-15s (10-50%)
-            this.renderMonths((progress - 0.1) / 0.4);
-        } else if (progress < 0.7) {
-            // Stats: 15-21s (50-70%)
-            this.renderStats((progress - 0.5) / 0.2);
+        // Determine phase and render (adjusted for 45s duration to show ALL content)
+        if (progress < 0.07) {
+            // Intro: 0-3s (0-7%)
+            this.renderIntro(progress / 0.07);
+        } else if (progress < 0.45) {
+            // Months: 3-20s (7-45%) - show ALL months
+            this.renderMonths((progress - 0.07) / 0.38);
+        } else if (progress < 0.55) {
+            // Insights: 20-25s (45-55%)
+            this.renderInsights((progress - 0.45) / 0.1);
+        } else if (progress < 0.75) {
+            // Stats: 25-34s (55-75%)
+            this.renderStats((progress - 0.55) / 0.2);
         } else {
-            // Your Moment: 21-30s (70-100%)
-            this.renderVerdict((progress - 0.7) / 0.3);
+            // Your Moment: 34-45s (75-100%)
+            this.renderVerdict((progress - 0.75) / 0.25);
         }
         
         // Draw watermark
@@ -191,12 +194,12 @@ export class HighlightReel {
      * Render months phase: Top 3 months carousel
      */
     renderMonths(progress) {
-        const months = this.data.months?.slice(0, 3) || [];
+        const months = this.data.months || []; // Show ALL months
         if (months.length === 0) return;
         
-        // Calculate which month to show (each gets 1/3 of the time)
-        const monthIndex = Math.min(Math.floor(progress * 3), 2);
-        const monthProgress = (progress * 3) % 1;
+        // Calculate which month to show (each gets equal time)
+        const monthIndex = Math.min(Math.floor(progress * months.length), months.length - 1);
+        const monthProgress = (progress * months.length) % 1;
         
         const month = months[monthIndex];
         const centerX = CANVAS_WIDTH / 2;
@@ -212,16 +215,10 @@ export class HighlightReel {
         this.ctx.globalAlpha = opacity;
         this.ctx.translate(centerX + slideOffset, centerY);
         
-        // Month number badge
-        this.ctx.fillStyle = 'rgba(255,255,255,0.1)';
-        this.ctx.beginPath();
-        this.ctx.arc(0, -80, 60, 0, Math.PI * 2);
-        this.ctx.fill();
-        
-        // Draw Icon
+        // Icon only (no background circle)
         const iconName = month.iconName;
         if (iconName) {
-            this.drawIcon(iconName, 0, -80, 40, COLORS.pink);
+            this.drawIcon(iconName, 0, -80, 50, COLORS.pink);
         } else {
             // Fallback
             this.ctx.fillStyle = COLORS.pink;
@@ -241,21 +238,20 @@ export class HighlightReel {
         this.ctx.font = 'italic 36px "Inter", sans-serif';
         this.ctx.fillText(`"${month.title || ''}"`, 0, 100);
         
-        // Month content (truncated)
+        // Month content (full text with better wrapping)
         this.ctx.fillStyle = COLORS.dimWhite;
-        this.ctx.font = '24px "Inter", sans-serif';
+        this.ctx.font = '22px "Inter", sans-serif';
         const content = month.content || '';
-        const truncated = content.length > 80 ? content.substring(0, 80) + '...' : content;
-        this.wrapText(truncated, 0, 160, 800, 32);
+        this.wrapText(content, 0, 150, 900, 30);
         
         // Mood badge
         // this.ctx.fillStyle = 'rgba(255,144,232,0.2)';
         // this.roundRect(-80, 200, 160, 40, 20);
         this.ctx.fill();
         this.ctx.fillStyle = COLORS.white;
-        this.ctx.font = '18px "Space Mono", monospace';
-        this.ctx.textAlign = 'center'; // Re-confirm alignment
-        this.ctx.fillText(`Mood: ${month.mood || 'vibing'}`, 0, 227);
+        this.ctx.font = '16px "Space Mono", monospace';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText(`Mood: ${month.mood || 'vibing'}`, 0, 280);
         
         this.ctx.restore();
         
@@ -341,6 +337,54 @@ export class HighlightReel {
         this.ctx.restore();
     }
     
+    /**
+     * Render insights phase: Show user insights
+     */
+    renderInsights(progress) {
+        const insights = this.data.insights || [];
+        if (insights.length === 0) return;
+        
+        const centerX = CANVAS_WIDTH / 2;
+        
+        this.ctx.save();
+        
+        // Title
+        const titleOpacity = Math.min(progress * 3, 1);
+        this.ctx.globalAlpha = titleOpacity;
+        this.ctx.fillStyle = COLORS.pink;
+        this.ctx.font = `bold 80px ${FONTS.display}`;
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText('YOUR INSIGHTS', centerX, 180);
+        
+        // Show insights one by one
+        const insightIndex = Math.min(Math.floor(progress * insights.length), insights.length - 1);
+        const insightProgress = (progress * insights.length) % 1;
+        const fadeIn = Math.min(insightProgress / 0.2, 1);
+        const fadeOut = insightProgress > 0.8 ? 1 - (insightProgress - 0.8) / 0.2 : 1;
+        
+        this.ctx.globalAlpha = fadeIn * fadeOut;
+        this.ctx.fillStyle = COLORS.white;
+        this.ctx.font = `36px ${FONTS.body}`;
+        
+        const insight = insights[insightIndex];
+        // Draw arrow
+        this.ctx.fillStyle = COLORS.green;
+        this.ctx.font = `bold 48px ${FONTS.body}`;
+        this.ctx.fillText('→', centerX - 400, CANVAS_HEIGHT / 2);
+        
+        // Draw insight text
+        this.ctx.fillStyle = COLORS.white;
+        this.ctx.font = `32px ${FONTS.body}`;
+        this.ctx.textAlign = 'left';
+        this.wrapText(insight, centerX - 350, CANVAS_HEIGHT / 2 - 20, 700, 45);
+        
+        // Progress dots
+        this.ctx.textAlign = 'center';
+        this.drawProgressDots(insightIndex, insights.length);
+        
+        this.ctx.restore();
+    }
+
     // ... existing renderStats, renderVerdict, drawProgressDots, drawWatermark, wrapText, roundRect, getCanvas ...
 
     renderStats(progress) {
@@ -411,22 +455,26 @@ export class HighlightReel {
                             line2 += (line2 ? ' ' : '') + word;
                         }
                     }
-                    this.ctx.fillText(line1, x, y + 50);
+                    this.ctx.fillText(line1, x, y + 45);
                     if (line2) {
-                        this.ctx.font = `bold ${fontSize - 8}px ${FONTS.display}`;
-                        this.ctx.fillText(line2.substring(0, 25), x, y + 50 + fontSize);
+                        this.ctx.font = `bold ${fontSize - 6}px ${FONTS.display}`;
+                        // Show full line2 text, use smaller font if needed
+                        this.ctx.fillText(line2, x, y + 45 + fontSize - 5);
                     }
                 } else {
                     this.ctx.fillText(value, x, y + 60);
                 }
                 
-                // Label - at bottom of card
+                // Label - at bottom of card (auto-size font to fit)
                 this.ctx.fillStyle = COLORS.pink;
-                this.ctx.font = `14px ${FONTS.mono}`;
                 const label = (stat.label || '').toUpperCase();
-                // Truncate label if too long
-                const displayLabel = label.length > 30 ? label.substring(0, 30) + '...' : label;
-                this.ctx.fillText(displayLabel, x, y + cardHeight - 30);
+                // Auto-size label font based on length
+                let labelFontSize = 14;
+                if (label.length > 35) labelFontSize = 10;
+                else if (label.length > 25) labelFontSize = 11;
+                else if (label.length > 18) labelFontSize = 12;
+                this.ctx.font = `${labelFontSize}px ${FONTS.mono}`;
+                this.ctx.fillText(label, x, y + cardHeight - 30);
             }
         });
         
