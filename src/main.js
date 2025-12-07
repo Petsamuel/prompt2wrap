@@ -2,6 +2,10 @@ import './index.css';
 import { renderInputScreen, renderLoading, renderResults, incrementUsage } from './ui.js';
 import { analyzePrompt } from './api.js';
 import { initBackground } from './background.js';
+import { inject } from '@vercel/analytics';
+
+// Initialize Vercel Analytics
+inject();
 
 // Initialize 3D Background
 initBackground();
