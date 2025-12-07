@@ -1,5 +1,6 @@
-// API configuration
-const API_BASE_URL = import.meta.env.API_URL ||'http://localhost:3001';
+// API configuration - Use production URL if on Vercel, otherwise localhost for dev
+const API_BASE_URL = import.meta.env.VITE_API_URL || 
+  (window.location.hostname === 'localhost' ? 'http://localhost:3001' : 'https://prompt2wrap-server.vercel.app/');
 
 /**
  * Check if input is a ChatGPT share URL
