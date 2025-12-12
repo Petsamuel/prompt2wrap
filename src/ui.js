@@ -419,20 +419,48 @@ export function renderLoading() {
             <div class="relative w-32 h-32 mx-auto">
                 <div class="absolute inset-0 border-4 border-neo-pink rounded-full border-t-transparent animate-spin"></div>
                 <div class="absolute inset-2 border-4 border-neo-blue rounded-full border-b-transparent animate-spin-slow" style="animation-direction: reverse;"></div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <span class="font-mono text-xs text-white/50 animate-pulse">AI</span>
+                </div>
             </div>
-            <h2 class="font-display text-4xl text-white">GENERATING</h2>
-            <p class="font-mono text-xs text-white/50" id="loading-step">ANALYZING_YOUR_VIBE</p>
+            <h2 class="font-display text-4xl text-white tracking-widest animate-pulse">GENERATING</h2>
+            <div class="h-8">
+                <p class="font-mono text-sm text-neo-pink tracking-widest" id="loading-step">INITIALIZING NEURO LINK</p>
+            </div>
+            <p class="font-mono text-xs text-white/30 hidden" id="loading-timeout">Taking longer than usual... brilliance takes time.</p>
         </div>
       </div>
     `;
     
-    const steps = ["READING_BETWEEN_LINES", "EXTRACTING_CHAOS", "BUILDING_TIMELINE", "RENDERING_STORY"];
+    const steps = [
+        "READING BETWEEN LINES", 
+        "DECODING CHAOS", 
+        "ANALYZING VIBE SHIFT", 
+        "EXTRACTING PERSONALITY", 
+        "COMPILING RECEIPTS", 
+        "GENERATING ROAST", 
+        "APPLYING GLITTER", 
+        "TRAINING NEURAL NET",
+        "CALCULATING RIZZ SCORE",
+        "RENDERING TRUTH",
+        "FINAL POLISH"
+    ];
+    
     let i = 0;
     const interval = setInterval(() => {
         const el = document.getElementById('loading-step');
-        if(el) el.innerText = steps[i++ % steps.length];
-        else clearInterval(interval);
-    }, 700);
+        if(el) {
+            el.innerText = steps[i++ % steps.length];
+        } else {
+            clearInterval(interval);
+        }
+    }, 800);
+
+    // Show timeout message after 8 seconds
+    setTimeout(() => {
+        const timeoutEl = document.getElementById('loading-timeout');
+        if(timeoutEl) timeoutEl.classList.remove('hidden');
+    }, 8000);
 }
 
 export function renderResults(data) {
