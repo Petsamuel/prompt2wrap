@@ -131,15 +131,6 @@ export function renderInputScreen(onSubmit) {
   const closeHelpBtn = document.getElementById('close-help');
 
   if (helpBtn && helpOverlay && closeHelpBtn) {
-      // Pulse animation for the trigger (Disabled for cleaner look)
-      // gsap.to(helpBtn, { 
-      //     scale: 1.05, 
-      //     duration: 2, 
-      //     repeat: -1, 
-      //     yoyo: true, 
-      //     ease: "sine.inOut" 
-      // });
-
       // Toggle Card logic
       helpBtn.addEventListener('click', () => {
           if (helpOverlay.classList.contains('hidden')) {
@@ -148,6 +139,7 @@ export function renderInputScreen(onSubmit) {
                   { opacity: 0, x: 20 }, 
                   { opacity: 1, x: 0, duration: 0.3, ease: "power2.out" }
               );
+              createIcons({ icons }); // Re-render icons for new content
           } else {
               gsap.to(helpOverlay, { 
                   opacity: 0, 
@@ -170,6 +162,73 @@ export function renderInputScreen(onSubmit) {
       };
 
       closeHelpBtn.addEventListener('click', closeAction);
+
+      // --- TAB SWITCHING ---
+      const tabHowto = document.getElementById('tab-howto');
+      const tabPrompt = document.getElementById('tab-prompt');
+      const contentHowto = document.getElementById('content-howto');
+      const contentPrompt = document.getElementById('content-prompt');
+
+      if (tabHowto && tabPrompt && contentHowto && contentPrompt) {
+          tabHowto.addEventListener('click', () => {
+              tabHowto.classList.add('text-neo-pink', 'border-neo-pink');
+              tabHowto.classList.remove('text-white/50', 'border-transparent');
+              tabPrompt.classList.remove('text-neo-pink', 'border-neo-pink');
+              tabPrompt.classList.add('text-white/50', 'border-transparent');
+              contentHowto.classList.remove('hidden');
+              contentPrompt.classList.add('hidden');
+          });
+
+          tabPrompt.addEventListener('click', () => {
+              tabPrompt.classList.add('text-neo-pink', 'border-neo-pink');
+              tabPrompt.classList.remove('text-white/50', 'border-transparent');
+              tabHowto.classList.remove('text-neo-pink', 'border-neo-pink');
+              tabHowto.classList.add('text-white/50', 'border-transparent');
+              contentPrompt.classList.remove('hidden');
+              contentHowto.classList.add('hidden');
+              createIcons({ icons }); // Re-render icons
+          });
+      }
+
+      // --- COPY PROMPT FUNCTIONALITY ---
+      const copyPromptBtn = document.getElementById('copy-prompt-btn');
+      const copyPromptText = document.getElementById('copy-prompt-text');
+      const wrappedPrompt = document.getElementById('wrapped-prompt');
+
+      if (copyPromptBtn && wrappedPrompt) {
+          copyPromptBtn.addEventListener('click', async () => {
+              try {
+                  await navigator.clipboard.writeText(wrappedPrompt.textContent);
+                  if (copyPromptText) {
+                      copyPromptText.textContent = 'Copied!';
+                      copyPromptBtn.classList.add('bg-neo-green/30', 'border-neo-green/50');
+                      setTimeout(() => {
+                          copyPromptText.textContent = 'Copy';
+                          copyPromptBtn.classList.remove('bg-neo-green/30', 'border-neo-green/50');
+                      }, 2000);
+                  }
+              } catch (err) {
+                  console.error('Failed to copy:', err);
+              }
+          });
+      }
+
+      // --- CLOSE AND GO TO INPUT FIELD ---
+      const closeAndPasteBtn = document.getElementById('close-and-paste-btn');
+      
+      if (closeAndPasteBtn) {
+          closeAndPasteBtn.addEventListener('click', () => {
+              closeAction();
+              // Focus the main input field after overlay closes
+              setTimeout(() => {
+                  const mainInput = document.getElementById('prompt-input');
+                  if (mainInput) {
+                      mainInput.focus();
+                      mainInput.placeholder = 'Paste your JSON response here...';
+                  }
+              }, 350);
+          });
+      }
   }
 
   // Add music toggle to the page (only if not already there)
@@ -182,10 +241,59 @@ export function renderInputScreen(onSubmit) {
 }
 
 function renderHelpOverlay() {
-    const { remaining } = getUsageStatus(); // Access the exported function if possible, or just read storage. 
-    // Since getUsageStatus is exported from this file, we can use it, but `renderHelpOverlay` is outside the module scope where it's defined? 
-    // No, it's in the same file.
+    const { remaining } = getUsageStatus();
+    const currentYear = new Date().getFullYear();
     
+    const chatGptWrappedPrompt = `Make me a "ChatGPT Wrapped", like Spotify Wrapped, summarizing everything from my conversations this year.
+
+I want it to be structured month by month, with honesty, personality, and a little wit. Capture my tone, patterns and growth across the year, not just topics.
+
+Include overarching insights, emotional trends, key phrases I used often, and a verdict at the end that feels like both a roast and a recognition.
+
+Format it like a year-end highlight reel - clear headers per month, short reflective blurbs, and a final "by-the-numbers" section (e.g., top words, themes, emotional states, etc.).
+
+Write it in a human, conversational voice, clever but not cringe. Make it sound like an intelligent friend doing a funny, brutally honest wrap-up of my year with ChatGPT.
+
+IMPORTANT: Format your response as valid JSON with this exact structure:
+{
+  "userName": "Your name or nickname for this user",
+  "tagline": "A witty one-liner that captures their year",
+  "months": [
+    {
+      "name": "January",
+      "title": "Short catchy title for the month",
+      "content": "2-3 sentence reflective blurb about this month",
+      "mood": "dominant mood (e.g., 'curious', 'stressed', 'creative')",
+      "iconName": "lucide icon name (e.g., 'brain', 'heart', 'rocket', 'coffee')"
+    }
+  ],
+  "insights": ["insight 1", "insight 2", "insight 3"],
+  "keyPhrases": ["phrase 1", "phrase 2", "phrase 3"],
+  "topTopics": [
+    {"topic": "Topic Name", "percentage": 25}
+  ],
+  "personalityTraits": {
+    "curiosity": 85,
+    "creativity": 70,
+    "analytical": 90,
+    "humor": 65,
+    "intensity": 75
+  },
+  "communicationStyle": {
+    "type": "The Curious Tinkerer",
+    "description": "Brief description of their communication style",
+    "strengths": ["strength 1", "strength 2"],
+    "improvement": "Area for growth"
+  },
+  "emotionalStates": ["curious", "determined", "creative"],
+  "funFacts": ["Fun fact 1", "Fun fact 2", "Fun fact 3"],
+  "stats": [
+    {"label": "TOP TOPIC", "value": "Topic name"},
+    {"label": "MOOD", "value": "Dominant mood"}
+  ],
+  "finalVerdict": "A 2-3 sentence roast/recognition that's brutally honest but affectionate"
+}`;
+
     return `
     <!-- HELP TRIGGER -->
     <button id="help-trigger" class="fixed top-8 right-8 z-50 text-white/50 hover:text-white transition-colors">
@@ -193,46 +301,98 @@ function renderHelpOverlay() {
     </button>
 
     <!-- HELP CARD POPOVER -->
-    <div id="help-overlay" class="fixed top-24 right-4 md:right-8 z-50 w-80 md:w-96 neo-box p-6 hidden backdrop-blur-xl bg-black/90 border border-white/10 shadow-2xl shadow-neo-pink/10">
-        <!-- Header -->
-        <h3 class="font-display text-2xl text-neo-pink mb-6 uppercase">How to use</h3>
+    <div id="help-overlay" class="fixed top-24 right-4 md:right-8 z-50 w-80 md:w-[32rem] neo-box p-0 hidden backdrop-blur-xl bg-black/95 border border-white/10 shadow-2xl shadow-neo-pink/10 max-h-[80vh] overflow-hidden flex flex-col">
         
-        <!-- List -->
-        <ul class="space-y-6 font-mono text-sm text-white/80">
-            <li class="flex gap-4">
-                <span class="text-neo-green">→</span>
-                <span>Paste your conversation history, prompts, or describe your year</span>
-            </li>
-            <li class="flex gap-4">
-                <span class="text-neo-green">→</span>
-                <span>The AI will analyze your vibe and create a personalized "Wrapped"</span>
-            </li>
-            <li class="flex gap-4">
-                <span class="text-neo-green">→</span>
-                <span>Scroll through your story with immersive 3D sections</span>
-            </li>
-            
-            <li class="flex gap-4 items-center">
-                <span class="text-neo-green">→</span>
-                <div class="flex items-center gap-2">
-                    <span>Press</span>
-                    <kbd class="px-2 py-1 bg-white/10 rounded border border-white/20 text-xs">Ctrl + Enter</kbd>
-                    <span>to submit quickly</span>
+        <!-- Tabs -->
+        <div class="flex border-b border-white/10">
+            <button id="tab-howto" class="flex-1 py-4 px-4 font-mono text-xs uppercase tracking-wider text-neo-pink border-b-2 border-neo-pink transition-all">
+                How to Use
+            </button>
+            <button id="tab-prompt" class="flex-1 py-4 px-4 font-mono text-xs uppercase tracking-wider text-white/50 hover:text-white border-b-2 border-transparent transition-all">
+                ChatGPT Wrapped
+            </button>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="flex-1 overflow-y-auto p-6">
+            <!-- HOW TO USE TAB -->
+            <div id="content-howto" class="tab-content">
+                <ul class="space-y-5 font-mono text-sm text-white/80">
+                    <li class="flex gap-4">
+                        <span class="text-neo-green shrink-0">→</span>
+                        <span>Paste your conversation history, prompts, or describe your year</span>
+                    </li>
+                    <li class="flex gap-4">
+                        <span class="text-neo-green shrink-0">→</span>
+                        <span>The AI will analyze your vibe and create a personalized "Wrapped"</span>
+                    </li>
+                    <li class="flex gap-4">
+                        <span class="text-neo-green shrink-0">→</span>
+                        <span>Scroll through your story with immersive 3D sections</span>
+                    </li>
+                    <li class="flex gap-4 items-center">
+                        <span class="text-neo-green shrink-0">→</span>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span>Press</span>
+                            <kbd class="px-2 py-1 bg-white/10 rounded border border-white/20 text-xs">Ctrl + Enter</kbd>
+                            <span>to submit</span>
+                        </div>
+                    </li>
+                    <li class="flex gap-4 pt-4 border-t border-white/10 text-white/50">
+                        <span class="text-neo-green shrink-0">→</span>
+                        <span>You have <span class="text-white">${remaining} credits</span> remaining today</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- CHATGPT WRAPPED TAB -->
+            <div id="content-prompt" class="tab-content hidden">
+                <div class="space-y-4">
+                    <div class="text-center mb-6">
+                        <p class="text-white/60 text-sm">Copy this prompt to ChatGPT, Claude, or any LLM to generate your Wrapped data, then paste the result below.</p>
+                    </div>
+
+                    <!-- Step 1: Copy Prompt -->
+                    <div class="neo-box bg-white/5 p-4 rounded-lg">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="font-mono text-xs text-neo-green uppercase flex items-center gap-2">
+                                <span class="w-5 h-5 rounded-full bg-neo-green/20 flex items-center justify-center text-neo-green">1</span>
+                                Copy this prompt
+                            </span>
+                            <button id="copy-prompt-btn" class="px-3 py-1.5 bg-neo-pink/20 hover:bg-neo-pink/40 border border-neo-pink/50 rounded text-xs font-mono text-neo-pink transition-all flex items-center gap-2">
+                                <i data-lucide="copy" class="w-3 h-3"></i>
+                                <span id="copy-prompt-text">Copy</span>
+                            </button>
+                        </div>
+                        <div class="bg-black/50 rounded p-3 max-h-32 overflow-y-auto">
+                            <pre id="wrapped-prompt" class="text-xs text-white/70 whitespace-pre-wrap font-mono leading-relaxed">${chatGptWrappedPrompt}</pre>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Use in LLM -->
+                    <div class="neo-box bg-white/5 p-4 rounded-lg">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="w-5 h-5 rounded-full bg-neo-blue/20 flex items-center justify-center text-neo-blue font-mono text-xs">2</span>
+                            <span class="font-mono text-xs text-neo-blue uppercase">Paste in your LLM & Generate</span>
+                        </div>
+                        <p class="text-white/50 text-xs">Use ChatGPT, Claude, Gemini, or any AI with access to your conversation history.</p>
+                    </div>
+
+                    <!-- Step 3: Paste Result -->
+                    <div class="neo-box bg-white/5 p-4 rounded-lg">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="w-5 h-5 rounded-full bg-neo-yellow/20 flex items-center justify-center text-neo-yellow font-mono text-xs">3</span>
+                            <span class="font-mono text-xs text-neo-yellow uppercase">Paste the result</span>
+                        </div>
+                        <p class="text-white/50 text-xs mb-3">Copy the JSON response from your LLM and paste it into the main input field below.</p>
+                        
+                    </div>
                 </div>
-            </li>
+            </div>
+        </div>
 
-            <li class="flex gap-4 pt-4 border-t border-white/10 text-white/50">
-                <span class="text-neo-green">→</span>
-                <span>You have <span class="text-white">${remaining} credits</span> remaining today</span>
-            </li>
-        </ul>
-
-        <!-- Close Button (Absolute) -->
-        <!-- We can just toggle with the trigger, but let's keep a close button if needed, or maybe the trigger behaves as toggle. 
-             The previous design in the image likely didn't have a big X inside, maybe just clicking outside or the trigger again? 
-             But for safety, let's keep a subtle close or just rely on the trigger. 
-             Actually, let's add a small close icon in top right of card. -->
-        <button id="close-help" class="absolute top-4 right-4 text-white/20 hover:text-white transition-colors">
+        <!-- Close Button -->
+        <button id="close-help" class="absolute top-3 right-3 text-white/20 hover:text-white transition-colors">
             <i data-lucide="x" class="w-5 h-5"></i>
         </button>
     </div>
