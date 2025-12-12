@@ -554,7 +554,7 @@ export function renderResults(data) {
                                     <span class="text-neo-pink font-mono text-lg">${score}%</span>
                                 </div>
                                 <div class="h-3 bg-white/10 rounded-full overflow-hidden">
-                                    <div class="h-full rounded-full" style="width: ${score}%; background: linear-gradient(to right, #ff90e8, #23a0ff);"></div>
+                                    <div class="h-full rounded-full transition-all duration-1000 ease-out personality-bar" data-target-width="${score}" style="width: 0%; background: linear-gradient(to right, #ff90e8, #23a0ff);"></div>
                                 </div>
                             </div>
                         `).join('')}
@@ -616,9 +616,9 @@ export function renderResults(data) {
                     <!-- Stats Cards -->
                     <div class="grid grid-cols-2 gap-4">
                         ${data.stats.map((s, i) => `
-                            <div class="neo-box p-6 text-center transform hover:scale-105 transition-transform">
-                                <div class="text-xl md:text-xl font-display text-white mb-2">${s.value}</div>
-                                <div class="font-mono text-xs text-neo-pink uppercase">${s.label}</div>
+                            <div class="neo-box p-6 text-center transform hover:scale-105 transition-transform overflow-hidden">
+                                <div class="text-xl md:text-xl font-display text-white mb-2 overflow-hidden">${s.value}</div>
+                                <div class="font-mono text-xs text-neo-pink uppercase overflow-hidden">${s.label}</div>
                             </div>
                         `).join('')}
                     </div>
@@ -731,6 +731,25 @@ export function renderResults(data) {
             }
         });
     });
+
+    // Animate personality trait bars when section enters viewport
+    const personalitySectionEl = document.getElementById('personality-section');
+    if (personalitySectionEl) {
+        ScrollTrigger.create({
+            trigger: personalitySectionEl,
+            start: 'top 70%',
+            onEnter: () => {
+                const bars = personalitySectionEl.querySelectorAll('.personality-bar');
+                bars.forEach((bar, i) => {
+                    const targetWidth = bar.dataset.targetWidth;
+                    setTimeout(() => {
+                        bar.style.width = `${targetWidth}%`;
+                    }, i * 150); // Stagger animation
+                });
+            },
+            once: true // Only animate once
+        });
+    }
 
     // Stats Chart (Emotional States as Polar Area Chart)
     const chartCanvas = document.getElementById('statsChart');
@@ -1031,26 +1050,70 @@ export function renderResults(data) {
 
     // ========== PROGRESS BAR UPDATE ==========
     const progressFills = document.querySelectorAll('.progress-bar-fill');
+    const SEGMENT_DURATION = AUTO_SCROLL_DELAY; // Time to fill each segment (5 seconds)
+    let progressAnimationFrame = null;
+    let segmentStartTime = Date.now();
+    let lastActiveIndex = 0;
     
-    function updateProgressBars(activeIndex) {
+    function updateProgressBars(activeIndex, forceComplete = false) {
+        // If section changed, reset timer for current segment
+        if (activeIndex !== lastActiveIndex) {
+            segmentStartTime = Date.now();
+            lastActiveIndex = activeIndex;
+        }
+        
         progressFills.forEach((fill, index) => {
             if (index < activeIndex) {
                 // Past sections are fully filled
+                fill.style.transition = 'none';
                 fill.style.width = '100%';
             } else if (index === activeIndex) {
-                // Current section is active (full or animating)
-                fill.style.width = '100%';
+                // Current section fills gradually
+                if (forceComplete) {
+                    fill.style.transition = 'none';
+                    fill.style.width = '100%';
+                } else {
+                    const elapsed = Date.now() - segmentStartTime;
+                    const progress = Math.min((elapsed / SEGMENT_DURATION) * 100, 100);
+                    fill.style.transition = 'width 100ms linear';
+                    fill.style.width = `${progress}%`;
+                }
             } else {
                 // Future sections are empty
+                fill.style.transition = 'none';
                 fill.style.width = '0%';
             }
         });
     }
+    
+    // Animate progress continuously
+    function animateProgress() {
+        // Find which section is most visible
+        let activeIndex = 0;
+        sections.forEach((section, index) => {
+            const rect = section.getBoundingClientRect();
+            if (rect.top < window.innerHeight / 2 && rect.bottom > 0) {
+                activeIndex = index;
+            }
+        });
+        
+        updateProgressBars(activeIndex);
+        
+        // Update current section for auto-scroll
+        if (autoScrollEnabled) {
+            currentSectionIndex = activeIndex;
+        }
+        
+        progressAnimationFrame = requestAnimationFrame(animateProgress);
+    }
+    
+    // Start animation
+    animateProgress();
 
     // Initial progress bar state
     updateProgressBars(0);
 
-    // Update on scroll
+    // Update on scroll (reset timer for new section)
     let scrollTimeout;
     window.addEventListener('scroll', () => {
         clearTimeout(scrollTimeout);
@@ -1064,7 +1127,7 @@ export function renderResults(data) {
                 }
             });
             
-            // Update progress bars
+            // If section changed, this will reset the timer
             updateProgressBars(activeIndex);
             
             // Update current section for auto-scroll
