@@ -6,6 +6,7 @@ import { setMood, setChaosLevel } from './background.js';
 import { openShareModal } from './shareCapture.js';
 import { createMusicToggle, initMusicToggle } from './music.js';
 import { initTour } from './tour.js';
+import { saveWrapped } from './firebase.js';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -39,7 +40,7 @@ export function renderInputScreen(onSubmit) {
       </div>
 
       <!-- MAIN CONTENT -->
-      <div class="relative z-10 w-full max-w-7xl mx-auto px-4 flex flex-col items-center justify-center min-h-screen">
+      <div class="relative z-10 w-full max-w-7xl mx-auto px-4 flex flex-col items-center justify-center min-h-screen my-4">
         
         <!-- STACKED LOGO: PROMPT / 2 / WRAPPED -->
         <div class="text-center mb-12 relative" id="logo-container">
@@ -63,7 +64,7 @@ export function renderInputScreen(onSubmit) {
                  <p class="font-mono text-white/60">Daily limit reached. Recharge required.</p>
                </div>
              ` : `
-               <label class="block font-mono text-xs text-neo-pink mb-4 tracking-widest">PASTE YOUR PROMPTS OR CHATGPT SHARE LINK</label>
+               <label class="block font-mono text-xs text-neo-pink mb-4 tracking-widest">PASTE YOUR PROMPTS ↴</label>
                <textarea 
                  id="prompt-input" 
                  rows="5" 
@@ -419,9 +420,6 @@ export function renderLoading() {
             <div class="relative w-32 h-32 mx-auto">
                 <div class="absolute inset-0 border-4 border-neo-pink rounded-full border-t-transparent animate-spin"></div>
                 <div class="absolute inset-2 border-4 border-neo-blue rounded-full border-b-transparent animate-spin-slow" style="animation-direction: reverse;"></div>
-                <div class="absolute inset-0 flex items-center justify-center">
-                    <span class="font-mono text-xs text-white/50 animate-pulse">AI</span>
-                </div>
             </div>
             <h2 class="font-display text-4xl text-white tracking-widest animate-pulse">GENERATING</h2>
             <div class="h-8">
@@ -635,16 +633,20 @@ export function renderResults(data) {
 
     const finalSection = `
         <section class="min-h-screen flex flex-col items-center justify-center px-8 py-20 relative">
-            <div class="max-w-3xl w-full text-center">
+            <div class="max-w-3xl w-full text-center my-2">
                 <h2 class="font-display text-6xl md:text-8xl text-white mb-8">YOUR MOMENT</h2>
                 <p class="text-2xl md:text-3xl text-white/90 leading-relaxed font-bold">${data.finalVerdict}</p>
-                <div class="mt-16 flex flex-col sm:flex-row gap-4 justify-center items-center">
-                    <button id="share-btn" class="neo-button-secondary">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-                        SHARE
-                    </button>
-                    <button id="reset-btn" class="neo-button">START OVER</button>
-                </div>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center items-center my-4">
+                        <button id="get-link-btn" class="neo-button inline-flex items-center gap-2 mr-2">
+                            <i data-lucide="link" class="w-4 h-4 "></i>
+                            SHARE LINK
+                        </button>
+                        <button id="share-btn" class="neo-button-secondary">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                            DOWNLOAD GIF
+                        </button>
+                    </div>
+                    <button id="reset-btn" class="neo-button mt-4">START OVER</button>
             </div>
         </section>
     `;
@@ -854,6 +856,43 @@ export function renderResults(data) {
                     legend: { display: false }
                 }
             }
+        });
+    }
+
+    // Get Link button handler
+    const getLinkBtn = document.getElementById('get-link-btn');
+    if (getLinkBtn) {
+        getLinkBtn.addEventListener('click', async () => {
+             const originalText = getLinkBtn.innerHTML;
+             try {
+                 getLinkBtn.innerHTML = '<span class="animate-pulse">SAVING...</span>';
+                 getLinkBtn.disabled = true;
+                 
+                 const id = await saveWrapped(data);
+                 const url = window.location.origin + '?id=' + id;
+                 
+                 await navigator.clipboard.writeText(url);
+                 getLinkBtn.innerHTML = '<i data-lucide="check" class="w-4 h-4 mr-2"></i>COPIED!';
+                 getLinkBtn.classList.add('bg-neo-green/20', 'text-neo-green', 'border-neo-green/50');
+                 getLinkBtn.classList.remove('bg-neo-blue/20', 'text-neo-blue', 'border-neo-blue/50');
+                 createIcons({ icons: ['check'] });
+                 
+                 setTimeout(() => {
+                     getLinkBtn.innerHTML = originalText;
+                     getLinkBtn.disabled = false;
+                     getLinkBtn.classList.remove('bg-neo-green/20', 'text-neo-green', 'border-neo-green/50');
+                     getLinkBtn.classList.add('bg-neo-blue/20', 'text-neo-blue', 'border-neo-blue/50');
+                     createIcons({ icons: ['link'] });
+                 }, 3000);
+             } catch (err) {
+                 console.error('Failed to save wrapped:', err);
+                 getLinkBtn.innerHTML = 'ERROR';
+                 setTimeout(() => {
+                     getLinkBtn.innerHTML = originalText;
+                     getLinkBtn.disabled = false;
+                     createIcons({ icons: ['link'] });
+                 }, 2000);
+             }
         });
     }
 
