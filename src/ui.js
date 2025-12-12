@@ -524,8 +524,8 @@ export function renderResults(data) {
                                         <span class="text-white font-medium">${t.topic}</span>
                                         <span class="text-white/60 font-mono text-sm">${t.percentage}%</span>
                                     </div>
-                                    <div class="h-2 bg-white/10 rounded-full overflow-hidden">
-                                        <div class="h-full rounded-full transition-all duration-1000" style="width: ${t.percentage}%; background: ${colors[i % colors.length]}"></div>
+                                    <div class="h-3 bg-white/10 rounded-full overflow-hidden">
+                                        <div class="h-full rounded-full" style="width: ${t.percentage}%; background: linear-gradient(to right, ${colors[i % colors.length]}, ${colors[(i + 1) % colors.length]})"></div>
                                     </div>
                                 </div>
                             </div>
@@ -554,7 +554,7 @@ export function renderResults(data) {
                                     <span class="text-neo-pink font-mono text-lg">${score}%</span>
                                 </div>
                                 <div class="h-3 bg-white/10 rounded-full overflow-hidden">
-                                    <div class="h-full rounded-full transition-all duration-1000 ease-out personality-bar" data-target-width="${score}" style="width: 0%; background: linear-gradient(to right, #ff90e8, #23a0ff);"></div>
+                                    <div class="h-full rounded-full" style="width: ${score}%; background: linear-gradient(to right, #ff90e8, #23a0ff);"></div>
                                 </div>
                             </div>
                         `).join('')}
@@ -731,25 +731,6 @@ export function renderResults(data) {
             }
         });
     });
-
-    // Animate personality trait bars when section enters viewport
-    const personalitySectionEl = document.getElementById('personality-section');
-    if (personalitySectionEl) {
-        ScrollTrigger.create({
-            trigger: personalitySectionEl,
-            start: 'top 70%',
-            onEnter: () => {
-                const bars = personalitySectionEl.querySelectorAll('.personality-bar');
-                bars.forEach((bar, i) => {
-                    const targetWidth = bar.dataset.targetWidth;
-                    setTimeout(() => {
-                        bar.style.width = `${targetWidth}%`;
-                    }, i * 150); // Stagger animation
-                });
-            },
-            once: true // Only animate once
-        });
-    }
 
     // Stats Chart (Emotional States as Polar Area Chart)
     const chartCanvas = document.getElementById('statsChart');
