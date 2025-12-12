@@ -461,7 +461,7 @@ export function renderLoading() {
     }, 8000);
 }
 
-export function renderResults(data) {
+export function renderResults(data, isSharedView = false) {
     const currentYear = new Date().getFullYear();
 
     // Generate sections HTML from data.months
@@ -636,6 +636,7 @@ export function renderResults(data) {
             <div class="max-w-3xl w-full text-center my-2">
                 <h2 class="font-display text-6xl md:text-8xl text-white mb-8">YOUR MOMENT</h2>
                 <p class="text-2xl md:text-3xl text-white/90 leading-relaxed font-bold">${data.finalVerdict}</p>
+                    ${!isSharedView ? `
                     <div class="flex flex-col sm:flex-row gap-4 justify-center items-center my-4">
                         <button id="get-link-btn" class="neo-button inline-flex items-center gap-2 mr-2">
                             <i data-lucide="link" class="w-4 h-4 "></i>
@@ -646,6 +647,7 @@ export function renderResults(data) {
                             DOWNLOAD GIF
                         </button>
                     </div>
+                    ` : ''}
                     <button id="reset-btn" class="neo-button mt-4">START OVER</button>
             </div>
         </section>
@@ -897,75 +899,77 @@ export function renderResults(data) {
     }
 
     // Share button handler - try native share first, fall back to modal
-    document.getElementById('share-btn').addEventListener('click', async () => {
-        const shareBtn = document.getElementById('share-btn');
-        const originalText = shareBtn.innerHTML;
-        
-        try {
-            // Import share capture classes
-            const { HighlightReel, GifConverter } = await import('./shareCapture.js');
+    const shareBtn = document.getElementById('share-btn');
+    if (shareBtn) {
+        shareBtn.addEventListener('click', async () => {
+            const originalText = shareBtn.innerHTML;
             
-            // Show loading state
-            shareBtn.innerHTML = '<span class="animate-pulse">Creating GIF...</span>';
-            shareBtn.disabled = true;
-            
-            // Create highlight reel
-            const reel = new HighlightReel(data);
-            const gifConverter = new GifConverter();
-            await gifConverter.loadLibrary();
-            
-            // Capture frames
-            const frames = [];
-            let frameCount = 0;
-            const targetFrames = 150; // ~5 seconds at 30fps equivalent
-            const skipFrames = 9; // Capture every 9th frame to reduce size
-            
-            reel.onFrame((canvas) => {
-                frameCount++;
-                if (frameCount % skipFrames === 0 && frames.length < targetFrames) {
-                    frames.push(canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height));
-                }
-            });
-            
-            await new Promise((resolve) => {
-                reel.onComplete(resolve);
-                reel.start();
-            });
-            
-            // Convert to GIF
-            shareBtn.innerHTML = '<span class="animate-pulse">Generating GIF...</span>';
-            const gifBlob = await gifConverter.convert(frames, reel.getCanvas().width, reel.getCanvas().height);
-            
-            // Create file for sharing
-            const file = new File([gifBlob], 'my-wrapped.gif', { type: 'image/gif' });
-            
-            // Check if native share is available and can share files
-            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                await navigator.share({
-                    files: [file],
-                    title: 'My Prompt2Wrapped',
-                    text: `Check out my ${new Date().getFullYear()} Wrapped!`
+            try {
+                // Import share capture classes
+                const { HighlightReel, GifConverter } = await import('./shareCapture.js');
+                
+                // Show loading state
+                shareBtn.innerHTML = '<span class="animate-pulse">Creating GIF...</span>';
+                shareBtn.disabled = true;
+                
+                // Create highlight reel
+                const reel = new HighlightReel(data);
+                const gifConverter = new GifConverter();
+                await gifConverter.loadLibrary();
+                
+                // Capture frames
+                const frames = [];
+                let frameCount = 0;
+                const targetFrames = 150; // ~5 seconds at 30fps equivalent
+                const skipFrames = 9; // Capture every 9th frame to reduce size
+                
+                reel.onFrame((canvas) => {
+                    frameCount++;
+                    if (frameCount % skipFrames === 0 && frames.length < targetFrames) {
+                        frames.push(canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height));
+                    }
                 });
-            } else {
-                // Fallback: download the file
-                const url = URL.createObjectURL(gifBlob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'my-wrapped.gif';
-                a.click();
-                URL.revokeObjectURL(url);
+                
+                await new Promise((resolve) => {
+                    reel.onComplete(resolve);
+                    reel.start();
+                });
+                
+                // Convert to GIF
+                shareBtn.innerHTML = '<span class="animate-pulse">Generating GIF...</span>';
+                const gifBlob = await gifConverter.convert(frames, reel.getCanvas().width, reel.getCanvas().height);
+                
+                // Create file for sharing
+                const file = new File([gifBlob], 'my-wrapped.gif', { type: 'image/gif' });
+                
+                // Check if native share is available and can share files
+                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        files: [file],
+                        title: 'My Prompt2Wrapped',
+                        text: `Check out my ${new Date().getFullYear()} Wrapped!`
+                    });
+                } else {
+                    // Fallback: download the file
+                    const url = URL.createObjectURL(gifBlob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'my-wrapped.gif';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                }
+                
+            } catch (err) {
+                console.error('Share failed:', err);
+                // Fall back to modal
+                openShareModal(data);
+            } finally {
+                // Restore button
+                shareBtn.innerHTML = originalText;
+                shareBtn.disabled = false;
             }
-            
-        } catch (err) {
-            console.error('Share failed:', err);
-            // Fall back to modal
-            openShareModal(data);
-        } finally {
-            // Restore button
-            shareBtn.innerHTML = originalText;
-            shareBtn.disabled = false;
-        }
-    });
+        });
+    }
 
     document.getElementById('reset-btn').addEventListener('click', () => {
          gsap.to('#results-container', { opacity: 0, y: -20, duration: 0.5, onComplete: () => renderInputScreen(window._onSubmit) });

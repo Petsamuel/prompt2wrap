@@ -51,7 +51,7 @@ if (shareId) {
     getWrapped(shareId)
         .then(data => {
             if (data) {
-                renderResults(data);
+                renderResults(data, true); // true = isSharedView
             } else {
                 alert('This Wrapped link is invalid or has expired.');
                 window.history.replaceState({}, document.title, window.location.pathname);
