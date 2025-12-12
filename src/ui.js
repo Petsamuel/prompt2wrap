@@ -73,8 +73,8 @@ export function renderInputScreen(onSubmit) {
                  <div class="flex items-center gap-4 text-xs font-mono text-white/40">
                     <span>${remaining}/${max} CREDITS</span>
                  </div>
-                 <button id="generate-btn" class="neo-button group !text-sm md:!text-lg">
-                    <span class="relative z-10 group-hover:text-black ">GENERATE WRAPPED</span>
+                 <button id="generate-btn" class="neo-button group !text-sm ">
+                    <span class="relative z-10 !group-hover:text-black">GENERATE WRAPPED</span>
                  </button>
                </div>
              `}
