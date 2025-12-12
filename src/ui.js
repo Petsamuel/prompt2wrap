@@ -5,6 +5,7 @@ import Chart from 'chart.js/auto';
 import { setMood, setChaosLevel } from './background.js';
 import { openShareModal } from './shareCapture.js';
 import { createMusicToggle, initMusicToggle } from './music.js';
+import { initTour } from './tour.js';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -84,7 +85,8 @@ export function renderInputScreen(onSubmit) {
       </div>
       
       <div class="fixed bottom-4 right-4 z-40">
-        <div class="font-mono text-xs text-white/30 text-right">
+        <div class="font-mono text-xs text-white/30 text-right flex items-center justify-end gap-4">
+          <button id="restart-tour-btn" class="hover:text-neo-pink transition-colors">[GUIDE]</button>
           <p>SYSTEM_STATUS: ONLINE</p>
         </div>
       </div>
@@ -238,6 +240,17 @@ export function renderInputScreen(onSubmit) {
     document.body.appendChild(musicContainer.firstElementChild);
   }
   initMusicToggle();
+  
+  // Initialize Tour (Auto-starts if not seen)
+  const driverObj = initTour();
+  
+  // Restart Tour button
+  const restartTxourBtn = document.getElementById('restart-tour-btn');
+  if (restartTxourBtn) {
+      restartTxourBtn.addEventListener('click', () => {
+          driverObj.drive();
+      });
+  }
 }
 
 function renderHelpOverlay() {
@@ -301,7 +314,7 @@ IMPORTANT: Format your response as valid JSON with this exact structure:
     </button>
 
     <!-- HELP CARD POPOVER -->
-    <div id="help-overlay" class="fixed top-24 right-4 md:right-8 z-50 w-80 md:w-[32rem] neo-box p-0 hidden backdrop-blur-xl bg-black/95 border border-white/10 shadow-2xl shadow-neo-pink/10 max-h-[80vh] overflow-hidden flex flex-col">
+    <div id="help-overlay" class="fixed top-24 right-4 md:right-8 z-50 w-80 md:w-[32rem] neo-box p-0 hidden backdrop-blur-xl bg-black/95 border border-white/10 shadow-2xl shadow-neo-pink/10 max-h-[80vh] overflow-hidden flex-col">
         
         <!-- Tabs -->
         <div class="flex border-b border-white/10">
@@ -309,7 +322,7 @@ IMPORTANT: Format your response as valid JSON with this exact structure:
                 How to Use
             </button>
             <button id="tab-prompt" class="flex-1 py-4 px-4 font-mono text-xs uppercase tracking-wider text-white/50 hover:text-white border-b-2 border-transparent transition-all">
-                ChatGPT Wrapped
+                Prompt
             </button>
         </div>
 

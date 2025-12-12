@@ -1323,3 +1323,65 @@
     height: 18px;
   }
 }
+
+/* ====== DRIVER.JS THEME OVERRIDES ====== */
+.driverjs-theme {
+  --popover-bg: #050505;
+  --popover-text: #ffffff;
+  --popover-title-color: #ff90e8; /* Neo Pink */
+  --popover-border: 1px solid rgba(255, 144, 232, 0.5);
+}
+
+.driver-popover.driverjs-theme {
+  background-color: var(--popover-bg);
+  color: var(--popover-text);
+  border: var(--popover-border);
+  border-radius: 0; /* Brutalist/Neo style */
+  box-shadow: 0 0 30px rgba(255, 144, 232, 0.2);
+  font-family: 'Space Mono', monospace;
+}
+
+.driver-popover.driverjs-theme .driver-popover-title {
+  color: var(--popover-title-color);
+  font-family: 'Archivo Black', sans-serif;
+  text-transform: uppercase;
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.driver-popover.driverjs-theme .driver-popover-description {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.driver-popover.driverjs-theme button {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0;
+  font-family: 'Space Mono', monospace;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  padding: 5px 10px;
+  transition: all 0.2s;
+  text-shadow: none;
+}
+
+.driver-popover.driverjs-theme button:hover {
+  background-color: #ff90e8;
+  color: black;
+  border-color: #ff90e8;
+}
+
+.driver-popover.driverjs-theme .driver-popover-footer {
+  margin-top: 1rem;
+}
+
+.driver-popover.driverjs-theme .driver-popover-progress-text {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.driver-popover.driverjs-theme .driver-popover-navigation-btns {
+  gap: 8px;
+}
